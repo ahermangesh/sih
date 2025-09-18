@@ -11,17 +11,17 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 25px 35px;
+  padding: 12px 20px;
   background: white;
   border-bottom: 1px solid #f0f0f0;
 }
 
 .map-header h2 {
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 600;
   color: #1a1a1a;
   margin: 0;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.3px;
 }
 
 .map-controls {
