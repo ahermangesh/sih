@@ -27,7 +27,6 @@ FloatChat is an enterprise-grade AI-powered conversational system that democrati
 ### Prerequisites
 
 - Python 3.11+
-- Node.js 16+ (for React frontend)
 - PostgreSQL 15+ with PostGIS
 - Redis 6+
 - Docker & Docker Compose
@@ -40,66 +39,44 @@ git clone https://github.com/your-org/floatchat.git
 cd floatchat
 ```
 
-2. **Backend Setup**
+2. **Set up virtual environment**
 ```bash
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
 # venv\Scripts\activate   # Windows
 ```
 
-3. **Install backend dependencies**
+3. **Install dependencies**
 ```bash
 pip install -r requirements.txt
 pip install -r requirements-dev.txt  # For development
 ```
 
-4. **Frontend Setup**
-```bash
-cd react-dashboard
-npm install
-cd ..
-```
-
-5. **Configure environment**
+4. **Configure environment**
 ```bash
 cp env.example .env
 # Edit .env with your API keys and database credentials
-
-# Configure frontend
-cd react-dashboard
-cp .env.example .env
-# Edit with backend URLs (default: http://localhost:8000)
-cd ..
 ```
 
-6. **Start services**
+5. **Start services**
 ```bash
 docker-compose up -d postgres redis
 ```
 
-7. **Initialize database**
+6. **Initialize database**
 ```bash
 python scripts/init_database.py
 python scripts/load_sample_data.py
 ```
 
-8. **Run the applications**
-
-**Backend:**
+7. **Run the application**
 ```bash
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-**Frontend (in a new terminal):**
-```bash
-cd react-dashboard
-npm start
-```
-
-9. **Access the applications**
-- **Modern React Dashboard**: http://localhost:3000
+8. **Access the application**
 - API Documentation: http://localhost:8000/docs
-- Legacy Frontend: http://localhost:8501
+- Frontend Interface: http://localhost:8501
 - Health Check: http://localhost:8000/health
 
 ## 🏗️ Architecture
