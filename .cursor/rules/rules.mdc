@@ -1,0 +1,520 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+# FloatChat - Professional Development Rules
+# AI-Powered Conversational Interface for ARGO Ocean Data Discovery and Visualization
+# SIH 25 Problem Statement ID: 25040
+
+# =============================================================================
+# PROJECT OVERVIEW
+# =============================================================================
+# This is FloatChat, an enterprise-grade AI-powered system for oceanographic data exploration.
+# We're building a conversational interface that allows users to query ARGO float data using
+# natural language and voice commands in multiple languages (English/Hindi).
+#
+# Key Components:
+# - Google Gemini Studio API for LLM processing
+# - PostgreSQL with PostGIS for geospatial data
+# - FAISS/ChromaDB for vector similarity search
+# - Voice processing with Web Speech API and gTTS
+# - Interactive visualization with Plotly/Folium
+# - RESTful API with FastAPI
+# - Frontend with Streamlit/Dash
+
+# =============================================================================
+# CODE QUALITY STANDARDS
+# =============================================================================
+
+## Python Code Standards
+- Follow PEP 8 style guide strictly
+- Use Black formatter with line length 88 characters
+- Use type hints for all functions and class methods
+- Use docstrings in Google format for all public functions/classes
+- Import organization: standard library, third-party, local imports (separated by blank lines)
+- Use f-strings for string formatting, avoid .format() and % formatting
+- Use pathlib.Path for file operations, not os.path
+- Use context managers (with statements) for resource management
+- Prefer list comprehensions over map/filter when readable
+- Use dataclasses or Pydantic models for structured data
+
+## FastAPI Specific Standards
+- Use dependency injection for database sessions, authentication, etc.
+- Implement proper request/response models with Pydantic
+- Use HTTPException with appropriate status codes and detail messages
+- Implement comprehensive input validation
+- Use async/await for I/O operations (database, external APIs)
+- Group related endpoints in separate router files
+- Use proper OpenAPI documentation with examples
+- Implement proper error handling with try/catch blocks
+
+## Database Standards
+- Use SQLAlchemy ORM with declarative models
+- Implement proper database migrations with Alembic
+- Use connection pooling for production deployments
+- Implement proper transaction handling
+- Use parameterized queries to prevent SQL injection
+- Create proper indexes for query performance
+- Use PostGIS functions for spatial operations
+- Implement soft deletes where appropriate
+
+## Voice Processing Standards
+- Implement proper error handling for speech recognition failures
+- Use confidence scoring for transcription validation
+- Provide text fallback for all voice features
+- Support multiple languages (English, Hindi) with proper encoding
+- Implement audio preprocessing (noise reduction, normalization)
+- Use streaming processing for real-time voice features
+- Cache TTS responses to reduce API calls
+- Implement proper audio format handling (WAV, MP3, WebM)
+
+## AI/LLM Integration Standards
+- Implement proper rate limiting for API calls
+- Use exponential backoff for retry logic
+- Implement response caching to reduce costs
+- Use structured prompts with consistent formatting
+- Implement fallback responses when API is unavailable
+- Validate LLM responses before returning to users
+- Implement conversation context management
+- Use proper token counting for cost optimization
+
+# =============================================================================
+# ARCHITECTURE PATTERNS
+# =============================================================================
+
+## Project Structure
+```
+app/
+├── __init__.py
+├── main.py                 # FastAPI app entry point
+├── core/                   # Core configuration and utilities
+│   ├── config.py          # Settings and environment variables
+│   ├── database.py        # Database connection and session management
+│   └── security.py        # Authentication and authorization
+├── api/                   # API route handlers
+│   ├── __init__.py
+│   ├── chat.py           # Chat and conversation endpoints
+│   ├── voice.py          # Voice processing endpoints
+│   ├── floats.py         # ARGO float data endpoints
+│   └── visualize.py      # Data visualization endpoints
+├── services/             # Business logic layer
+│   ├── __init__.py
+│   ├── gemini_service.py # LLM integration service
+│   ├── voice_service.py  # Speech processing service
+│   ├── argo_service.py   # ARGO data service
+│   └── rag_service.py    # RAG pipeline service
+├── models/               # Data models and schemas
+│   ├── __init__.py
+│   ├── database.py       # SQLAlchemy ORM models
+│   └── schemas.py        # Pydantic request/response models
+└── utils/                # Utility functions
+    ├── __init__.py
+    ├── audio_processing.py
+    └── data_validation.py
+```
+
+## Service Layer Pattern
+- Keep API routes thin, move business logic to services
+- Use dependency injection for service dependencies
+- Implement proper error handling and logging in services
+- Use async/await for I/O operations
+- Return structured results with success/error status
+
+## Repository Pattern
+- Abstract database operations behind repository interfaces
+- Implement generic repository with common CRUD operations
+- Use specific repositories for complex domain operations
+- Implement proper transaction handling
+- Use connection pooling and session management
+
+# =============================================================================
+# ERROR HANDLING AND LOGGING
+# =============================================================================
+
+## Error Handling Standards
+- Use structured exception handling with custom exception classes
+- Implement proper HTTP status codes (400, 401, 403, 404, 422, 500)
+- Provide meaningful error messages for users
+- Log errors with correlation IDs for debugging
+- Implement graceful degradation for non-critical features
+- Use circuit breakers for external service calls
+
+## Logging Standards
+- Use structured logging with JSON format
+- Include correlation IDs for request tracking
+- Log at appropriate levels (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+- Never log sensitive information (API keys, passwords, personal data)
+- Use contextual logging with request/user information
+- Implement log rotation and retention policies
+
+Example logging format:
+```python
+import structlog
+
+logger = structlog.get_logger(__name__)
+
+async def process_voice_query(audio_data: bytes, user_id: str, correlation_id: str):
+    logger.info(
+        "Processing voice query",
+        user_id=user_id,
+        correlation_id=correlation_id,
+        audio_length=len(audio_data)
+    )
+    try:
+        # Process audio
+        result = await voice_service.transcribe(audio_data)
+        logger.info(
+            "Voice transcription completed",
+            correlation_id=correlation_id,
+            transcription_confidence=result.confidence
+        )
+        return result
+    except Exception as e:
+        logger.error(
+            "Voice processing failed",
+            correlation_id=correlation_id,
+            error=str(e),
+            exc_info=True
+        )
+        raise
+```
+
+# =============================================================================
+# TESTING STANDARDS
+# =============================================================================
+
+## Test Organization
+- Use pytest as the testing framework
+- Organize tests to mirror the app structure
+- Use fixtures for common test setup
+- Implement proper test isolation with database transactions
+- Use factory pattern for test data creation
+- Implement integration tests for critical workflows
+
+## Test Coverage Requirements
+- Minimum 90% code coverage for all modules
+- 100% coverage for critical business logic
+- Test both success and failure scenarios
+- Test edge cases and boundary conditions
+- Use property-based testing for complex functions
+
+## Test Categories
+```
+tests/
+├── unit/                 # Fast, isolated unit tests
+├── integration/          # Component integration tests
+├── e2e/                 # End-to-end workflow tests
+├── performance/         # Load and performance tests
+└── fixtures/            # Test data and fixtures
+```
+
+# =============================================================================
+# SECURITY STANDARDS
+# =============================================================================
+
+## Input Validation
+- Validate all user inputs using Pydantic models
+- Sanitize inputs to prevent XSS and injection attacks
+- Implement rate limiting for all public endpoints
+- Use HTTPS for all communications
+- Validate file uploads and limit file sizes
+- Implement proper CORS configuration
+
+## Authentication and Authorization
+- Use JWT tokens with proper expiration
+- Implement refresh token rotation
+- Use secure password hashing (bcrypt with salt)
+- Implement proper session management
+- Use environment variables for secrets
+- Implement API key management for external access
+
+## Data Protection
+- Never log sensitive information
+- Encrypt sensitive data at rest
+- Use parameterized queries to prevent SQL injection
+- Implement proper data retention policies
+- Comply with privacy regulations (GDPR, etc.)
+
+# =============================================================================
+# PERFORMANCE STANDARDS
+# =============================================================================
+
+## Response Time Requirements
+- API endpoints: <500ms for 95th percentile
+- Database queries: <100ms for simple queries
+- Voice processing: <2s end-to-end
+- UI interactions: <200ms for immediate feedback
+
+## Optimization Techniques
+- Use database connection pooling
+- Implement response caching with Redis
+- Use async/await for I/O operations
+- Implement pagination for large result sets
+- Use database indexes for query optimization
+- Implement lazy loading for heavy operations
+
+## Monitoring and Metrics
+- Track response times and error rates
+- Monitor database performance and connection usage
+- Track API usage and quota consumption
+- Monitor memory and CPU usage
+- Implement health check endpoints
+
+# =============================================================================
+# DOCUMENTATION STANDARDS
+# =============================================================================
+
+## Code Documentation
+- Use docstrings for all public functions and classes
+- Include type hints for better IDE support
+- Document complex algorithms and business logic
+- Use meaningful variable and function names
+- Include examples in docstrings where helpful
+
+## API Documentation
+- Use OpenAPI/Swagger with detailed descriptions
+- Include request/response examples
+- Document all possible error responses
+- Provide authentication examples
+- Include rate limiting information
+
+## README and Setup Documentation
+- Provide clear setup instructions
+- Include environment variable requirements
+- Document deployment procedures
+- Include troubleshooting guides
+- Provide API usage examples
+
+# =============================================================================
+# DEVELOPMENT WORKFLOW
+# =============================================================================
+
+## Git Workflow
+- Use conventional commit messages (feat:, fix:, docs:, etc.)
+- Create feature branches for new development
+- Require code reviews for all changes
+- Use semantic versioning for releases
+- Keep commits atomic and focused
+
+## Code Review Checklist
+- [ ] Code follows style guidelines and formatting
+- [ ] All functions have proper type hints and docstrings
+- [ ] Error handling is comprehensive and appropriate
+- [ ] Tests are included and pass
+- [ ] Security best practices are followed
+- [ ] Performance implications are considered
+- [ ] Documentation is updated if needed
+
+## Development Environment
+- Use virtual environments for Python dependencies
+- Pin dependency versions in requirements.txt
+- Use Docker for consistent development environments
+- Set up pre-commit hooks for code quality
+- Use environment variables for configuration
+
+# =============================================================================
+# SPECIFIC IMPLEMENTATION GUIDELINES
+# =============================================================================
+
+## ARGO Data Processing
+- Validate NetCDF file integrity before processing
+- Handle missing or corrupted data gracefully
+- Implement proper coordinate system transformations
+- Use chunked processing for large datasets
+- Cache processed data to avoid recomputation
+
+## Geospatial Operations
+- Use PostGIS functions for spatial queries
+- Implement proper spatial indexing (GiST indexes)
+- Validate coordinate ranges and projections
+- Handle edge cases (date line crossing, polar regions)
+- Optimize spatial queries with bounding box filters
+
+## Natural Language Processing
+- Implement proper text preprocessing and normalization
+- Handle multilingual input with proper encoding
+- Use confidence scoring for interpretation quality
+- Implement fallback mechanisms for unclear queries
+- Cache common query patterns for performance
+
+## Voice Processing
+- Implement proper audio format detection and conversion
+- Use streaming processing for real-time features
+- Handle network interruptions gracefully
+- Implement audio quality assessment
+- Provide visual feedback for voice interactions
+
+# =============================================================================
+# DEPLOYMENT AND OPERATIONS
+# =============================================================================
+
+## Environment Configuration
+- Use environment-specific configuration files
+- Implement proper secret management
+- Use health check endpoints for monitoring
+- Implement graceful shutdown handling
+- Use proper logging configuration for production
+
+## Monitoring and Alerting
+- Implement application performance monitoring
+- Set up error tracking and alerting
+- Monitor external service dependencies
+- Track business metrics and usage patterns
+- Implement automated backup verification
+
+## Scalability Considerations
+- Design for horizontal scaling from the start
+- Use stateless application design
+- Implement proper caching strategies
+- Use message queues for heavy processing
+- Design database schema for partitioning
+
+# =============================================================================
+# ACCESSIBILITY AND INTERNATIONALIZATION
+# =============================================================================
+
+## Accessibility Requirements
+- Follow WCAG 2.1 AA guidelines
+- Provide keyboard navigation for all features
+- Implement proper ARIA labels and roles
+- Support screen readers and assistive technologies
+- Provide alternative text for visual elements
+
+## Internationalization
+- Support UTF-8 encoding throughout the system
+- Implement proper locale handling
+- Use translation keys instead of hardcoded strings
+- Support right-to-left languages if needed
+- Handle date, time, and number formatting by locale
+
+# =============================================================================
+# EXAMPLE CODE PATTERNS
+# =============================================================================
+
+## Service Class Pattern
+```python
+from typing import Optional, List
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.models.schemas import FloatQuery, FloatResponse
+from app.utils.exceptions import DataNotFoundError
+
+class ArgoService:
+    """Service for ARGO float data operations."""
+    
+    def __init__(self, db_session: AsyncSession, cache_service: CacheService):
+        self.db = db_session
+        self.cache = cache_service
+    
+    async def get_floats_by_region(
+        self, 
+        query: FloatQuery,
+        correlation_id: str
+    ) -> List[FloatResponse]:
+        """
+        Retrieve ARGO floats within specified region.
+        
+        Args:
+            query: Query parameters with spatial and temporal filters
+            correlation_id: Request correlation ID for logging
+            
+        Returns:
+            List of float data matching the query criteria
+            
+        Raises:
+            DataNotFoundError: If no floats found in specified region
+            ValidationError: If query parameters are invalid
+        """
+        logger.info(
+            "Retrieving floats by region",
+            correlation_id=correlation_id,
+            bbox=query.bbox,
+            date_range=query.date_range
+        )
+        
+        # Check cache first
+        cache_key = f"floats:{query.cache_key()}"
+        cached_result = await self.cache.get(cache_key)
+        if cached_result:
+            return cached_result
+        
+        # Query database
+        try:
+            floats = await self._query_floats(query)
+            if not floats:
+                raise DataNotFoundError(f"No floats found in region {query.bbox}")
+            
+            # Cache result
+            await self.cache.set(cache_key, floats, ttl=3600)
+            
+            logger.info(
+                "Floats retrieved successfully",
+                correlation_id=correlation_id,
+                count=len(floats)
+            )
+            return floats
+            
+        except Exception as e:
+            logger.error(
+                "Failed to retrieve floats",
+                correlation_id=correlation_id,
+                error=str(e),
+                exc_info=True
+            )
+            raise
+```
+
+## API Endpoint Pattern
+```python
+from fastapi import APIRouter, Depends, HTTPException, status
+from app.services.argo_service import ArgoService
+from app.models.schemas import FloatQuery, FloatResponse
+from app.core.dependencies import get_argo_service, get_correlation_id
+
+router = APIRouter(prefix="/api/v1/floats", tags=["floats"])
+
+@router.post("/search", response_model=List[FloatResponse])
+async def search_floats(
+    query: FloatQuery,
+    argo_service: ArgoService = Depends(get_argo_service),
+    correlation_id: str = Depends(get_correlation_id)
+) -> List[FloatResponse]:
+    """
+    Search for ARGO floats based on spatial and temporal criteria.
+    
+    - **bbox**: Bounding box coordinates [west, south, east, north]
+    - **date_range**: Start and end dates for temporal filtering
+    - **parameters**: Optional list of measurement parameters to include
+    """
+    try:
+        floats = await argo_service.get_floats_by_region(query, correlation_id)
+        return floats
+    except DataNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except ValidationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(e)
+        )
+```
+
+# =============================================================================
+# FINAL NOTES
+# =============================================================================
+
+Remember: This is a professional, enterprise-grade system for a government hackathon.
+Code quality, security, and maintainability are paramount. Every line of code should
+be production-ready, well-documented, and thoroughly tested.
+
+When in doubt, prioritize:
+1. Security and data protection
+2. Code clarity and maintainability  
+3. Performance and scalability
+4. User experience and accessibility
+5. Comprehensive error handling and logging
+
+Always consider the end users - oceanographers, researchers, and decision-makers who
+need reliable, accurate, and intuitive access to complex oceanographic data.

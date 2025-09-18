@@ -1,0 +1,151 @@
+# FloatChat - Development Dependencies
+# AI-Powered Conversational Interface for ARGO Ocean Data Discovery and Visualization
+
+# Include production requirements
+-r requirements.txt
+
+# =============================================================================
+# CODE QUALITY
+# =============================================================================
+# Code formatting
+black==23.12.0
+isort==5.13.2
+
+# Linting
+flake8==6.1.0
+flake8-docstrings==1.7.0
+flake8-import-order==0.18.2
+flake8-bugbear==23.12.2
+
+# Type checking
+mypy==1.8.0
+types-requests==2.31.0.10
+types-PyYAML==6.0.12.12
+types-python-dateutil==2.8.19.14
+
+# Security linting
+bandit==1.7.5
+safety==2.3.5
+
+# =============================================================================
+# TESTING
+# =============================================================================
+# Testing framework
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+pytest-xdist==3.5.0
+
+# Test utilities
+factory-boy==3.3.0
+faker==20.1.0
+responses==0.24.1
+httpx-mock==0.10.0
+
+# Load testing
+locust==2.18.1
+
+# Database testing
+pytest-postgresql==5.0.0
+testing.postgresql==1.3.0
+
+# =============================================================================
+# DOCUMENTATION
+# =============================================================================
+# Documentation generation
+sphinx==7.2.6
+sphinx-rtd-theme==2.0.0
+sphinx-autodoc-typehints==1.25.2
+myst-parser==2.0.0
+
+# API documentation
+mkdocs==1.5.3
+mkdocs-material==9.4.14
+mkdocstrings[python]==0.24.0
+
+# =============================================================================
+# DEVELOPMENT TOOLS
+# =============================================================================
+# Jupyter notebooks
+jupyter==1.0.0
+jupyterlab==4.0.9
+ipython==8.18.1
+
+# Pre-commit hooks
+pre-commit==3.6.0
+
+# Environment management
+python-dotenv==1.0.0
+
+# Debugging
+ipdb==0.13.13
+pdbpp==0.10.3
+
+# Performance profiling
+py-spy==0.3.14
+memory-profiler==0.61.0
+line-profiler==4.1.1
+
+# =============================================================================
+# DATABASE TOOLS
+# =============================================================================
+# Database management
+pgcli==4.0.1
+psycopg2-binary==2.9.9
+
+# Migration tools
+alembic==1.13.1
+
+# =============================================================================
+# DOCKER AND DEPLOYMENT
+# =============================================================================
+# Docker utilities
+docker-compose==1.29.2
+
+# =============================================================================
+# DATA ANALYSIS AND VISUALIZATION
+# =============================================================================
+# Data analysis
+pandas-profiling==3.6.6
+seaborn==0.13.0
+matplotlib==3.8.2
+
+# Geospatial analysis
+geopandas==0.14.1
+contextily==1.4.0
+
+# =============================================================================
+# PERFORMANCE MONITORING
+# =============================================================================
+# Performance monitoring
+py-spy==0.3.14
+scalene==1.5.26
+
+# =============================================================================
+# UTILITIES
+# =============================================================================
+# File watching for development
+watchdog==3.0.0
+
+# HTTP debugging
+httpie==3.2.2
+
+# JSON processing
+jq==1.6.0
+
+# Version management
+bump2version==1.0.1
+
+# =============================================================================
+# TESTING SPECIFIC
+# =============================================================================
+# Audio testing
+wave==0.0.2
+
+# NetCDF testing utilities
+h5netcdf==1.3.0
+
+# Mock services
+responses==0.24.1
+requests-mock==1.11.0

@@ -1,0 +1,165 @@
+# FloatChat - Production Dependencies
+# AI-Powered Conversational Interface for ARGO Ocean Data Discovery and Visualization
+
+# =============================================================================
+# WEB FRAMEWORK
+# =============================================================================
+fastapi==0.116.2
+uvicorn[standard]==0.35.0
+starlette==0.48.0
+pydantic==2.11.9
+pydantic-settings==2.10.1
+
+# =============================================================================
+# DATABASE
+# =============================================================================
+# PostgreSQL with PostGIS
+psycopg2-binary==2.9.10
+sqlalchemy==2.0.43
+alembic==1.13.1
+asyncpg==0.29.0
+geoalchemy2==0.14.2
+
+# Redis for caching
+redis==6.4.0
+# hiredis optional; commented to reduce Windows build issues
+# hiredis==2.2.3
+
+# =============================================================================
+# AI/ML AND LLM
+# =============================================================================
+# Google Gemini API
+google-generativeai==0.3.2
+google-ai-generativelanguage==0.4.0
+
+# Vector databases
+faiss-cpu==1.12.0
+chromadb==1.1.0
+sentence-transformers==5.1.0
+
+# Natural language processing
+transformers==4.56.1
+torch==2.8.0
+numpy==2.2.2
+scipy==1.14.1
+
+# =============================================================================
+# VOICE PROCESSING
+# =============================================================================
+# Speech recognition and synthesis
+SpeechRecognition==3.10.0
+gTTS==2.4.0
+pydub==0.25.1
+# pyaudio is optional and tricky on Windows; skip by default
+# pyaudio==0.2.11
+
+# Audio processing
+librosa==0.10.1
+soundfile==0.12.1
+webrtcvad==2.0.10
+
+# =============================================================================
+# DATA PROCESSING
+# =============================================================================
+# ARGO data processing
+argopy==0.1.15
+netCDF4==1.7.2
+xarray==2025.9.0
+
+# Data manipulation
+pandas==2.3.2
+numpy==2.2.2
+scipy==1.14.1
+pyproj==3.6.1
+
+# Geospatial processing
+shapely==2.0.2
+# GIS binaries below are optional/heavy on Windows; disable by default
+# fiona==1.9.5
+# rasterio==1.3.9
+
+# =============================================================================
+# VISUALIZATION
+# =============================================================================
+# Frontend frameworks
+streamlit==1.28.2
+dash==2.16.1
+plotly==5.17.0
+
+# Mapping libraries
+folium==0.15.1
+leafmap==0.28.1
+
+# Image processing
+Pillow==11.0.0
+# opencv optional; large wheel
+# opencv-python==4.8.1.78
+
+# =============================================================================
+# HTTP AND API
+# =============================================================================
+# HTTP clients
+httpx==0.28.1
+aiohttp==3.9.1
+requests==2.31.0
+
+# API documentation
+python-multipart==0.0.6
+
+# =============================================================================
+# UTILITIES
+# =============================================================================
+# Configuration management
+python-dotenv==1.1.1
+pyyaml==6.0.1
+toml==0.10.2
+
+# Date/time handling
+python-dateutil==2.8.2
+pytz==2023.3
+
+# Validation and serialization
+marshmallow==3.20.1
+cerberus==1.3.5
+
+# File handling
+pathlib2==2.3.7
+
+# Cryptography and security
+cryptography==46.0.1
+passlib==1.7.4
+python-jose[cryptography]==3.5.0
+
+# =============================================================================
+# MONITORING AND LOGGING
+# =============================================================================
+# Structured logging
+structlog==25.4.0
+langdetect==1.0.9
+# Switched to deep-translator for compatibility
+deep-translator==1.11.4
+sqlparse==0.4.4
+pydub==0.25.1
+python-json-logger==2.0.7
+
+# Monitoring
+prometheus-client==0.19.0
+
+# Error tracking
+sentry-sdk[fastapi]==1.38.0
+
+# =============================================================================
+# PERFORMANCE
+# =============================================================================
+# Caching
+cachetools==5.3.2
+diskcache==5.6.3
+
+# Async utilities
+asyncio-throttle==1.0.2
+
+# =============================================================================
+# VERSION CONSTRAINTS
+# =============================================================================
+# Python version requirement
+# Requires Python >= 3.11

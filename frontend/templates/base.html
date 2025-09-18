@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="FloatChat - AI-Powered Conversational Interface for ARGO Ocean Data Discovery and Visualization">
+    <meta name="keywords" content="ARGO, ocean data, AI, chatbot, oceanography, marine science">
+    <meta name="author" content="FloatChat Team - SIH 2025">
+    
+    <title>{% block title %}FloatChat - AI Ocean Data Explorer{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='assets/favicon.ico') }}">
+    
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
+    
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/chat.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/dashboard.css') }}" rel="stylesheet">
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container-fluid">
+            <!-- Brand -->
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
+                <i class="bi bi-water me-2"></i>
+                <span class="fw-bold">FloatChat</span>
+                <small class="text-light ms-2 d-none d-md-inline">AI Ocean Explorer</small>
+            </a>
+            
+            <!-- Mobile toggle -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <!-- Navigation items -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('dashboard') }}">
+                            <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('chat') }}">
+                            <i class="bi bi-chat-dots me-1"></i>Chat
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('explore') }}">
+                            <i class="bi bi-globe me-1"></i>Explore
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('data') }}">
+                            <i class="bi bi-database me-1"></i>Data
+                        </a>
+                    </li>
+                </ul>
+                
+                <!-- Right side items -->
+                <ul class="navbar-nav">
+                    <!-- Language selector -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-translate me-1"></i>
+                            <span id="current-language">English</span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" data-lang="en">🇺🇸 English</a></li>
+                            <li><a class="dropdown-item" href="#" data-lang="hi">🇮🇳 हिन्दी</a></li>
+                            <li><a class="dropdown-item" href="#" data-lang="bn">🇧🇩 বাংলা</a></li>
+                            <li><a class="dropdown-item" href="#" data-lang="te">🇮🇳 తెలుగు</a></li>
+                            <li><a class="dropdown-item" href="#" data-lang="ta">🇮🇳 தமிழ்</a></li>
+                        </ul>
+                    </li>
+                    
+                    <!-- Theme toggle -->
+                    <li class="nav-item">
+                        <button class="btn btn-link nav-link" id="theme-toggle" title="Toggle theme">
+                            <i class="bi bi-moon-fill"></i>
+                        </button>
+                    </li>
+                    
+                    <!-- Voice toggle -->
+                    <li class="nav-item">
+                        <button class="btn btn-link nav-link" id="voice-toggle" title="Toggle voice">
+                            <i class="bi bi-mic-mute"></i>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main content -->
+    <main class="main-content">
+        <!-- Alert container -->
+        <div id="alert-container" class="container-fluid mt-3">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+        
+        <!-- Page content -->
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-dark text-light py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5><i class="bi bi-water me-2"></i>FloatChat</h5>
+                    <p class="text-muted">AI-Powered Conversational Interface for ARGO Ocean Data Discovery and Visualization</p>
+                    <p class="text-muted small">SIH 2025 - Problem Statement ID: 25040</p>
+                </div>
+                <div class="col-md-3">
+                    <h6>Quick Links</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('dashboard') }}" class="text-light text-decoration-none">Dashboard</a></li>
+                        <li><a href="{{ url_for('chat') }}" class="text-light text-decoration-none">AI Chat</a></li>
+                        <li><a href="{{ url_for('explore') }}" class="text-light text-decoration-none">Explore Data</a></li>
+                        <li><a href="/docs" class="text-light text-decoration-none">API Docs</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6>About</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-light text-decoration-none">ARGO Program</a></li>
+                        <li><a href="#" class="text-light text-decoration-none">INCOIS</a></li>
+                        <li><a href="#" class="text-light text-decoration-none">Ministry of Earth Sciences</a></li>
+                        <li><a href="#" class="text-light text-decoration-none">Help</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-3">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="mb-0 text-muted">&copy; 2024 FloatChat Team. Built for SIH 2025.</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <small class="text-muted">
+                        Powered by <strong>Google Gemini</strong> • <strong>ARGO Data</strong> • <strong>FastAPI</strong>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Loading overlay -->
+    <div id="loading-overlay" class="loading-overlay d-none">
+        <div class="loading-spinner">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3">Processing your request...</p>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/voice.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/i18n.js') }}"></script>
+    
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

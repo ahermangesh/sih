@@ -1,0 +1,366 @@
+/* FloatChat - Main CSS Styles */
+
+/* CSS Custom Properties (Variables) */
+:root {
+  /* Ocean-inspired color palette */
+  --ocean-blue: #0077be;
+  --deep-blue: #003f5c;
+  --aqua-blue: #2e8bc0;
+  --light-blue: #b1d4e0;
+  --ocean-green: #006a6b;
+  --coral: #ff6b6b;
+  --sand: #f4f1de;
+  --white-foam: #ffffff;
+  
+  /* Semantic colors */
+  --primary-color: var(--ocean-blue);
+  --secondary-color: var(--ocean-green);
+  --accent-color: var(--coral);
+  --background-color: var(--white-foam);
+  --surface-color: #ffffff;
+  --text-primary: #2c3e50;
+  --text-secondary: #6c757d;
+  --border-color: #dee2e6;
+  
+  /* Spacing */
+  --header-height: 76px;
+  --footer-height: 200px;
+  --content-padding: 2rem;
+  
+  /* Shadows */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  
+  /* Transitions */
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+}
+
+/* Dark theme variables */
+[data-bs-theme="dark"] {
+  --background-color: #1a1a1a;
+  --surface-color: #2d2d2d;
+  --text-primary: #ffffff;
+  --text-secondary: #b0b0b0;
+  --border-color: #404040;
+}
+
+/* Base styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-primary);
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+  transition: background-color var(--transition-normal), color var(--transition-normal);
+}
+
+/* Main content layout */
+.main-content {
+  min-height: calc(100vh - var(--header-height) - var(--footer-height));
+  padding-top: var(--header-height);
+}
+
+/* Navigation enhancements */
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1.5rem;
+}
+
+.navbar-nav .nav-link {
+  font-weight: 500;
+  transition: color var(--transition-fast);
+  padding: 0.75rem 1rem;
+}
+
+.navbar-nav .nav-link:hover {
+  color: var(--light-blue) !important;
+}
+
+.navbar-nav .nav-link.active {
+  color: var(--white-foam) !important;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 0.375rem;
+}
+
+/* Buttons */
+.btn {
+  font-weight: 500;
+  border-radius: 0.5rem;
+  transition: all var(--transition-fast);
+  border: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--ocean-blue), var(--aqua-blue));
+  border: none;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--deep-blue), var(--ocean-blue));
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-secondary {
+  background-color: var(--ocean-green);
+  border-color: var(--ocean-green);
+}
+
+.btn-secondary:hover {
+  background-color: #005a5b;
+  border-color: #005a5b;
+}
+
+.btn-outline-primary {
+  color: var(--ocean-blue);
+  border-color: var(--ocean-blue);
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--ocean-blue);
+  border-color: var(--ocean-blue);
+}
+
+/* Cards */
+.card {
+  border: none;
+  border-radius: 1rem;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-normal);
+  background-color: var(--surface-color);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+.card-header {
+  background: linear-gradient(135deg, var(--ocean-blue), var(--aqua-blue));
+  color: white;
+  border-radius: 1rem 1rem 0 0 !important;
+  font-weight: 600;
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+/* Loading overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.loading-spinner {
+  text-align: center;
+  color: white;
+}
+
+.loading-spinner .spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* Alerts */
+.alert {
+  border-radius: 0.75rem;
+  border: none;
+  margin-bottom: 1rem;
+}
+
+.alert-success {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.alert-info {
+  background-color: var(--light-blue);
+  color: var(--deep-blue);
+}
+
+.alert-warning {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.alert-danger {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Form elements */
+.form-control {
+  border-radius: 0.5rem;
+  border: 2px solid var(--border-color);
+  transition: all var(--transition-fast);
+}
+
+.form-control:focus {
+  border-color: var(--ocean-blue);
+  box-shadow: 0 0 0 0.2rem rgba(0, 119, 190, 0.25);
+}
+
+.form-label {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+/* Dropdown menus */
+.dropdown-menu {
+  border: none;
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-lg);
+  padding: 0.5rem;
+}
+
+.dropdown-item {
+  border-radius: 0.5rem;
+  transition: all var(--transition-fast);
+}
+
+.dropdown-item:hover {
+  background-color: var(--light-blue);
+  color: var(--deep-blue);
+}
+
+/* Utility classes */
+.text-ocean {
+  color: var(--ocean-blue) !important;
+}
+
+.text-coral {
+  color: var(--coral) !important;
+}
+
+.bg-ocean {
+  background-color: var(--ocean-blue) !important;
+}
+
+.bg-gradient-ocean {
+  background: linear-gradient(135deg, var(--ocean-blue), var(--aqua-blue)) !important;
+}
+
+.border-ocean {
+  border-color: var(--ocean-blue) !important;
+}
+
+/* Animation utilities */
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .main-content {
+    padding-top: 70px;
+  }
+  
+  .navbar-brand {
+    font-size: 1.25rem;
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
+  
+  :root {
+    --content-padding: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .btn {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+  }
+  
+  .card {
+    border-radius: 0.75rem;
+  }
+  
+  .navbar-nav .nav-link {
+    padding: 0.5rem 1rem;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .card {
+    border: 2px solid var(--border-color);
+  }
+  
+  .btn {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Print styles */
+@media print {
+  .navbar,
+  .footer,
+  .btn,
+  #loading-overlay {
+    display: none !important;
+  }
+  
+  .main-content {
+    padding-top: 0;
+  }
+  
+  .card {
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+}

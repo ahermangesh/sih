@@ -1,0 +1,558 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - FloatChat{% endblock %}
+
+{% block extra_head %}
+<meta name="description" content="Real-time ocean data dashboard with ARGO float insights and interactive visualizations">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid dashboard-container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header text-center">
+        <h1 class="dashboard-title" data-i18n="dashboard.title">Ocean Data Dashboard</h1>
+        <p class="dashboard-subtitle" data-i18n="dashboard.subtitle">Real-time insights from ARGO float network</p>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+        <div class="stat-card fade-in">
+            <div class="stat-header">
+                <div class="stat-icon floats">
+                    <i class="bi bi-water"></i>
+                </div>
+            </div>
+            <div class="stat-value" id="floats-count">1,247</div>
+            <div class="stat-label" data-i18n="dashboard.stats.floats">Active Floats</div>
+            <div class="stat-change positive">
+                <i class="bi bi-arrow-up"></i>
+                <span>+12 this week</span>
+            </div>
+        </div>
+        
+        <div class="stat-card fade-in">
+            <div class="stat-header">
+                <div class="stat-icon profiles">
+                    <i class="bi bi-graph-up"></i>
+                </div>
+            </div>
+            <div class="stat-value" id="profiles-count">45,892</div>
+            <div class="stat-label" data-i18n="dashboard.stats.profiles">Total Profiles</div>
+            <div class="stat-change positive">
+                <i class="bi bi-arrow-up"></i>
+                <span>+234 today</span>
+            </div>
+        </div>
+        
+        <div class="stat-card fade-in">
+            <div class="stat-header">
+                <div class="stat-icon queries">
+                    <i class="bi bi-chat-dots"></i>
+                </div>
+            </div>
+            <div class="stat-value" id="queries-count">1,856</div>
+            <div class="stat-label" data-i18n="dashboard.stats.queries">Queries Today</div>
+            <div class="stat-change positive">
+                <i class="bi bi-arrow-up"></i>
+                <span>+18% vs yesterday</span>
+            </div>
+        </div>
+        
+        <div class="stat-card fade-in">
+            <div class="stat-header">
+                <div class="stat-icon languages">
+                    <i class="bi bi-translate"></i>
+                </div>
+            </div>
+            <div class="stat-value" id="languages-count">14</div>
+            <div class="stat-label" data-i18n="dashboard.stats.languages">Languages Supported</div>
+            <div class="stat-change">
+                <i class="bi bi-check-circle"></i>
+                <span>All active</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Charts Grid -->
+    <div class="chart-grid">
+        <!-- Temperature Trends Chart -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3 class="chart-title">
+                    <i class="bi bi-thermometer me-2"></i>
+                    <span data-i18n="viz.temperature">Temperature</span> Trends
+                </h3>
+                <div class="chart-controls">
+                    <button class="chart-control active" data-period="7d">7D</button>
+                    <button class="chart-control" data-period="30d">30D</button>
+                    <button class="chart-control" data-period="90d">90D</button>
+                </div>
+            </div>
+            <div class="chart-body">
+                <div class="chart-container">
+                    <canvas id="temperature-chart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Regional Distribution -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3 class="chart-title">
+                    <i class="bi bi-pie-chart me-2"></i>
+                    Regional Distribution
+                </h3>
+                <div class="chart-controls">
+                    <button class="chart-control active" data-type="floats">Floats</button>
+                    <button class="chart-control" data-type="profiles">Profiles</button>
+                </div>
+            </div>
+            <div class="chart-body">
+                <div class="chart-container">
+                    <canvas id="regional-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Interactive Map -->
+    <div class="map-container">
+        <div class="map-header">
+            <h3 class="map-title">
+                <i class="bi bi-globe me-2"></i>
+                Global ARGO Float Locations
+            </h3>
+            <div class="map-filters">
+                <button class="map-filter active" data-filter="all">All Floats</button>
+                <button class="map-filter" data-filter="active">Active Only</button>
+                <button class="map-filter" data-filter="recent">Recent Data</button>
+                <button class="map-filter" data-filter="bgc">BGC Floats</button>
+            </div>
+        </div>
+        <div id="dashboard-map"></div>
+    </div>
+    
+    <!-- Bottom Grid -->
+    <div class="row mt-4">
+        <!-- Activity Feed -->
+        <div class="col-lg-8">
+            <div class="activity-feed">
+                <div class="activity-header">
+                    <h3 class="activity-title">
+                        <i class="bi bi-activity me-2"></i>
+                        Recent Activity
+                    </h3>
+                </div>
+                <div class="activity-list" id="activity-list">
+                    <!-- Activity items will be loaded dynamically -->
+                    <div class="activity-item">
+                        <div class="activity-icon query">
+                            <i class="bi bi-chat-dots"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-title">Temperature query processed</div>
+                            <div class="activity-description">User asked about Arabian Sea temperature trends</div>
+                            <div class="activity-time">2 minutes ago</div>
+                        </div>
+                    </div>
+                    
+                    <div class="activity-item">
+                        <div class="activity-icon data">
+                            <i class="bi bi-database"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-title">New ARGO data ingested</div>
+                            <div class="activity-description">124 new profiles from Indian Ocean floats</div>
+                            <div class="activity-time">15 minutes ago</div>
+                        </div>
+                    </div>
+                    
+                    <div class="activity-item">
+                        <div class="activity-icon voice">
+                            <i class="bi bi-mic"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-title">Voice query in Hindi</div>
+                            <div class="activity-description">User asked "समुद्री तापमान कैसा है?" via voice</div>
+                            <div class="activity-time">32 minutes ago</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="col-lg-4">
+            <div class="quick-actions-panel">
+                <h3 class="quick-actions-title">
+                    <i class="bi bi-lightning me-2"></i>
+                    Quick Actions
+                </h3>
+                <div class="quick-actions-grid">
+                    <a href="{{ url_for('chat') }}" class="quick-action-btn">
+                        <i class="bi bi-chat-dots quick-action-icon"></i>
+                        <span class="quick-action-label">Start Chat</span>
+                    </a>
+                    
+                    <a href="{{ url_for('explore') }}" class="quick-action-btn">
+                        <i class="bi bi-search quick-action-icon"></i>
+                        <span class="quick-action-label">Explore Data</span>
+                    </a>
+                    
+                    <button class="quick-action-btn" onclick="showTemperatureData()">
+                        <i class="bi bi-thermometer quick-action-icon"></i>
+                        <span class="quick-action-label" data-i18n="quick.show_temperature">Temperature</span>
+                    </button>
+                    
+                    <button class="quick-action-btn" onclick="showSalinityData()">
+                        <i class="bi bi-droplet quick-action-icon"></i>
+                        <span class="quick-action-label" data-i18n="quick.show_salinity">Salinity</span>
+                    </button>
+                    
+                    <button class="quick-action-btn" onclick="findNearbyFloats()">
+                        <i class="bi bi-geo-alt quick-action-icon"></i>
+                        <span class="quick-action-label" data-i18n="quick.find_floats">Find Floats</span>
+                    </button>
+                    
+                    <a href="/docs" class="quick-action-btn">
+                        <i class="bi bi-question-circle quick-action-icon"></i>
+                        <span class="quick-action-label" data-i18n="quick.help">Help</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Dashboard JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    initializeDashboard();
+});
+
+function initializeDashboard() {
+    // Initialize charts
+    initializeTemperatureChart();
+    initializeRegionalChart();
+    
+    // Initialize map
+    initializeMap();
+    
+    // Load real-time data
+    loadDashboardData();
+    
+    // Set up real-time updates
+    setInterval(updateDashboardData, 30000); // Update every 30 seconds
+    
+    console.log('Dashboard initialized');
+}
+
+function initializeTemperatureChart() {
+    const ctx = document.getElementById('temperature-chart');
+    if (!ctx) return;
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [{
+                label: 'Average Temperature (°C)',
+                data: [24.2, 24.8, 25.1, 25.6, 26.2, 26.8],
+                borderColor: 'rgba(0, 119, 190, 1)',
+                backgroundColor: 'rgba(0, 119, 190, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+}
+
+function initializeRegionalChart() {
+    const ctx = document.getElementById('regional-chart');
+    if (!ctx) return;
+    
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Indian Ocean', 'Pacific Ocean', 'Atlantic Ocean', 'Southern Ocean'],
+            datasets: [{
+                data: [35, 28, 22, 15],
+                backgroundColor: [
+                    'rgba(0, 119, 190, 0.8)',
+                    'rgba(46, 139, 192, 0.8)',
+                    'rgba(0, 106, 107, 0.8)',
+                    'rgba(255, 107, 107, 0.8)'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true
+                    }
+                }
+            }
+        }
+    });
+}
+
+function initializeMap() {
+    // Initialize Leaflet map
+    const map = L.map('dashboard-map').setView([20, 78], 4);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    
+    // Add sample ARGO float markers
+    const floatLocations = [
+        {lat: 15.0, lng: 73.0, id: 'ARGO001', status: 'active'},
+        {lat: 8.5, lng: 76.9, id: 'ARGO002', status: 'active'},
+        {lat: 13.1, lng: 80.3, id: 'ARGO003', status: 'recent'},
+        {lat: 19.1, lng: 72.9, id: 'ARGO004', status: 'active'},
+        {lat: 11.0, lng: 77.0, id: 'ARGO005', status: 'bgc'}
+    ];
+    
+    floatLocations.forEach(float => {
+        const color = getFloatColor(float.status);
+        const marker = L.circleMarker([float.lat, float.lng], {
+            radius: 8,
+            fillColor: color,
+            color: '#fff',
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.8
+        }).addTo(map);
+        
+        marker.bindPopup(`
+            <div class="popup-content">
+                <h6>${float.id}</h6>
+                <p>Status: <span class="badge bg-primary">${float.status}</span></p>
+                <p>Last update: 2 hours ago</p>
+                <button class="btn btn-sm btn-outline-primary" onclick="viewFloatDetails('${float.id}')">
+                    View Details
+                </button>
+            </div>
+        `);
+    });
+    
+    window.dashboardMap = map;
+}
+
+function getFloatColor(status) {
+    const colors = {
+        'active': '#0077be',
+        'recent': '#4ade80',
+        'bgc': '#ff6b6b',
+        'inactive': '#6c757d'
+    };
+    return colors[status] || colors.active;
+}
+
+async function loadDashboardData() {
+    try {
+        if (window.floatChat) {
+            window.floatChat.showLoading('Loading dashboard data...');
+        }
+        
+        // Use API client for requests
+        const api = window.floatChatAPI;
+        if (!api) {
+            throw new Error('API client not available');
+        }
+        
+        // Load statistics
+        const stats = await api.getDashboardStats();
+        updateStatistics(stats);
+        
+        // Load activity feed
+        const activity = await api.getActivityFeed(10);
+        updateActivityFeed(activity.activities);
+        
+        // Load float locations for map
+        const locations = await api.getFloatLocations();
+        updateMapMarkers(locations);
+        
+    } catch (error) {
+        console.error('Failed to load dashboard data:', error);
+        if (window.floatChat) {
+            window.floatChat.showNotification('Failed to load dashboard data', 'error');
+        }
+    } finally {
+        if (window.floatChat) {
+            window.floatChat.hideLoading();
+        }
+    }
+}
+
+function updateStatistics(stats) {
+    if (stats.floats_count) {
+        document.getElementById('floats-count').textContent = 
+            window.i18n ? window.i18n.formatNumber(stats.floats_count) : stats.floats_count;
+    }
+    
+    if (stats.profiles_count) {
+        document.getElementById('profiles-count').textContent = 
+            window.i18n ? window.i18n.formatNumber(stats.profiles_count) : stats.profiles_count;
+    }
+    
+    if (stats.queries_count) {
+        document.getElementById('queries-count').textContent = 
+            window.i18n ? window.i18n.formatNumber(stats.queries_count) : stats.queries_count;
+    }
+}
+
+function updateActivityFeed(activities) {
+    const activityList = document.getElementById('activity-list');
+    if (!activityList || !activities || !activities.length) return;
+    
+    activityList.innerHTML = activities.map(activity => `
+        <div class="activity-item">
+            <div class="activity-icon ${activity.type}">
+                <i class="bi bi-${getActivityIcon(activity.type)}"></i>
+            </div>
+            <div class="activity-content">
+                <div class="activity-title">${activity.title}</div>
+                <div class="activity-description">${activity.description}</div>
+                <div class="activity-time">${formatRelativeTime(activity.timestamp)}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function getActivityIcon(type) {
+    const icons = {
+        'query': 'chat-dots',
+        'data': 'database',
+        'voice': 'mic',
+        'system': 'gear'
+    };
+    return icons[type] || 'info-circle';
+}
+
+function formatRelativeTime(timestamp) {
+    if (window.i18n && window.i18n.formatRelativeTime) {
+        return window.i18n.formatRelativeTime(timestamp);
+    }
+    
+    const now = new Date();
+    const time = new Date(timestamp);
+    const diff = Math.floor((now - time) / 1000);
+    
+    if (diff < 60) return `${diff} seconds ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)} minutes ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
+    return `${Math.floor(diff / 86400)} days ago`;
+}
+
+function updateDashboardData() {
+    // Refresh data periodically
+    loadDashboardData();
+}
+
+// Quick action functions
+function showTemperatureData() {
+    window.location.href = '/explore?type=temperature';
+}
+
+function showSalinityData() {
+    window.location.href = '/explore?type=salinity';
+}
+
+function findNearbyFloats() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(position => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            window.location.href = `/explore?lat=${lat}&lng=${lng}&radius=500`;
+        });
+    } else {
+        window.location.href = '/explore';
+    }
+}
+
+function viewFloatDetails(floatId) {
+    window.location.href = `/data/floats/${floatId}`;
+}
+
+// Chart control handlers
+document.addEventListener('click', function(event) {
+    if (event.target.matches('.chart-control')) {
+        // Update active state
+        event.target.parentNode.querySelectorAll('.chart-control').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+        
+        // Handle chart update based on control
+        const period = event.target.dataset.period;
+        const type = event.target.dataset.type;
+        
+        if (period) {
+            updateChartPeriod(period);
+        }
+        if (type) {
+            updateChartType(type);
+        }
+    }
+    
+    if (event.target.matches('.map-filter')) {
+        // Update active state
+        event.target.parentNode.querySelectorAll('.map-filter').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+        
+        // Handle map filter
+        const filter = event.target.dataset.filter;
+        updateMapFilter(filter);
+    }
+});
+
+function updateChartPeriod(period) {
+    console.log('Updating chart period to:', period);
+    // Implementation would update the chart data based on period
+}
+
+function updateChartType(type) {
+    console.log('Updating chart type to:', type);
+    // Implementation would update the chart data based on type
+}
+
+function updateMapFilter(filter) {
+    console.log('Updating map filter to:', filter);
+    // Implementation would filter map markers based on filter
+}
+</script>
+{% endblock %}

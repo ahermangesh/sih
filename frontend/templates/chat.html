@@ -1,0 +1,696 @@
+{% extends "base.html" %}
+
+{% block title %}AI Chat - FloatChat{% endblock %}
+
+{% block extra_head %}
+<meta name="description" content="Conversational AI interface for ARGO ocean data queries with voice support and multilingual capabilities">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-10 col-xl-8">
+            <div class="chat-container">
+                <!-- Chat Header -->
+                <div class="chat-header">
+                    <div class="chat-title">
+                        <i class="bi bi-robot me-2"></i>
+                        <span data-i18n="chat.title">AI Ocean Explorer</span>
+                    </div>
+                    
+                    <div class="chat-status">
+                        <div class="status-indicator" id="connection-status"></div>
+                        <span id="status-text">Online</span>
+                    </div>
+                    
+                    <div class="chat-controls">
+                        <button class="btn btn-sm btn-outline-light voice-btn" 
+                                id="chat-voice-btn" 
+                                title="Start voice input"
+                                data-i18n-title="chat.voice_start">
+                            <i class="bi bi-mic"></i>
+                        </button>
+                        
+                        <button class="btn btn-sm btn-outline-light" 
+                                id="clear-chat-btn" 
+                                title="Clear conversation">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-light dropdown-toggle" 
+                                    type="button" 
+                                    data-bs-toggle="dropdown">
+                                <i class="bi bi-three-dots"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="#" onclick="exportChat()">
+                                    <i class="bi bi-download me-2"></i>Export Chat
+                                </a></li>
+                                <li><a class="dropdown-item" href="#" onclick="shareChat()">
+                                    <i class="bi bi-share me-2"></i>Share
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/docs">
+                                    <i class="bi bi-question-circle me-2"></i>Help
+                                </a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Chat Messages -->
+                <div class="chat-messages" id="chat-messages">
+                    <!-- Welcome Message -->
+                    <div class="message assistant fade-in">
+                        <div class="message-avatar">
+                            <i class="bi bi-robot"></i>
+                        </div>
+                        <div class="message-content">
+                            <div class="message-bubble">
+                                <p>👋 Welcome to FloatChat! I'm your AI assistant for exploring ARGO ocean data.</p>
+                                <p>You can ask me about:</p>
+                                <ul>
+                                    <li>🌊 Ocean temperature and salinity data</li>
+                                    <li>🛰️ ARGO float locations and profiles</li>
+                                    <li>📊 Data visualization and analysis</li>
+                                    <li>🗣️ Voice queries in multiple languages</li>
+                                </ul>
+                                <p>Try asking: <em>"Show me temperature data from the Arabian Sea"</em></p>
+                            </div>
+                            <div class="message-time" id="welcome-time"></div>
+                            <div class="message-actions">
+                                <button class="message-action" onclick="speakMessage(this)" title="Read aloud">
+                                    <i class="bi bi-volume-up"></i>
+                                </button>
+                                <button class="message-action" onclick="copyMessage(this)" title="Copy">
+                                    <i class="bi bi-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Typing indicator (hidden by default) -->
+                    <div class="typing-indicator" id="typing-indicator" style="display: none;">
+                        <div class="message-avatar">
+                            <i class="bi bi-robot"></i>
+                        </div>
+                        <div class="typing-bubble">
+                            <span data-i18n="chat.typing">AI is typing...</span>
+                            <div class="typing-dots">
+                                <div class="typing-dot"></div>
+                                <div class="typing-dot"></div>
+                                <div class="typing-dot"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Voice Visualization -->
+                <div class="voice-visualization" id="voice-visualization">
+                    <div class="voice-bars">
+                        <div class="voice-bar"></div>
+                        <div class="voice-bar"></div>
+                        <div class="voice-bar"></div>
+                        <div class="voice-bar"></div>
+                        <div class="voice-bar"></div>
+                    </div>
+                    <p class="mt-2 mb-0" data-i18n="chat.listening">Listening...</p>
+                </div>
+                
+                <!-- Chat Input Area -->
+                <div class="chat-input-area">
+                    <div class="chat-input-container">
+                        <textarea class="chat-input" 
+                                  id="chat-input" 
+                                  placeholder="Ask about ocean data, ARGO floats, or marine conditions..."
+                                  data-i18n-placeholder="chat.placeholder"
+                                  rows="1"></textarea>
+                        
+                        <div class="input-actions">
+                            <button class="input-action" 
+                                    id="attach-btn" 
+                                    title="Attach file"
+                                    onclick="attachFile()">
+                                <i class="bi bi-paperclip"></i>
+                            </button>
+                            
+                            <button class="input-action voice-btn" 
+                                    id="input-voice-btn" 
+                                    title="Voice input"
+                                    data-i18n-title="chat.voice_start">
+                                <i class="bi bi-mic"></i>
+                            </button>
+                        </div>
+                        
+                        <button class="send-btn" 
+                                id="send-btn" 
+                                onclick="sendMessage()"
+                                disabled>
+                            <i class="bi bi-send-fill"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="quick-actions" id="quick-actions">
+                        <button class="quick-action" onclick="insertQuickQuery('Show me temperature data from the Arabian Sea')">
+                            <span data-i18n="quick.show_temperature">Show temperature data</span>
+                        </button>
+                        <button class="quick-action" onclick="insertQuickQuery('Find ARGO floats near Mumbai')">
+                            <span data-i18n="quick.find_floats">Find nearby floats</span>
+                        </button>
+                        <button class="quick-action" onclick="insertQuickQuery('What is the salinity in the Bay of Bengal?')">
+                            <span data-i18n="quick.show_salinity">Show salinity profiles</span>
+                        </button>
+                        <button class="quick-action" onclick="insertQuickQuery('Show recent ocean data')">
+                            <span data-i18n="quick.recent_data">Show recent data</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- File upload modal -->
+<div class="modal fade" id="fileUploadModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Upload File</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="fileInput" class="form-label">Select file to upload</label>
+                    <input type="file" class="form-control" id="fileInput" accept=".csv,.json,.txt,.nc">
+                </div>
+                <div class="mb-3">
+                    <label for="fileDescription" class="form-label">Description (optional)</label>
+                    <textarea class="form-control" id="fileDescription" rows="3" 
+                              placeholder="Describe what this file contains..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="uploadFile()">Upload</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Chat JavaScript
+let conversationId = null;
+let isProcessing = false;
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeChat();
+});
+
+function initializeChat() {
+    // Initialize conversation
+    conversationId = generateConversationId();
+    
+    // Set up event listeners
+    setupChatEventListeners();
+    
+    // Set welcome message time
+    document.getElementById('welcome-time').textContent = formatTime(new Date());
+    
+    // Focus on input
+    document.getElementById('chat-input').focus();
+    
+    console.log('Chat initialized with conversation ID:', conversationId);
+}
+
+function setupChatEventListeners() {
+    const chatInput = document.getElementById('chat-input');
+    const sendBtn = document.getElementById('send-btn');
+    
+    // Auto-resize textarea
+    chatInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+        
+        // Enable/disable send button
+        sendBtn.disabled = !this.value.trim();
+    });
+    
+    // Send on Enter (but not Shift+Enter)
+    chatInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            if (!isProcessing && this.value.trim()) {
+                sendMessage();
+            }
+        }
+    });
+    
+    // Voice transcript handler
+    document.addEventListener('voiceTranscript', function(event) {
+        const transcript = event.detail.transcript;
+        chatInput.value = transcript;
+        chatInput.dispatchEvent(new Event('input'));
+        
+        // Auto-send if voice input is complete
+        setTimeout(() => {
+            if (chatInput.value.trim()) {
+                sendMessage();
+            }
+        }, 1000);
+    });
+    
+    // Clear chat handler
+    document.getElementById('clear-chat-btn').addEventListener('click', clearChat);
+}
+
+async function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    
+    if (!message || isProcessing) return;
+    
+    isProcessing = true;
+    input.value = '';
+    input.style.height = 'auto';
+    document.getElementById('send-btn').disabled = true;
+    
+    // Add user message to chat
+    addUserMessage(message);
+    
+    // Show typing indicator
+    showTypingIndicator(true);
+    
+    try {
+        // Send message to API
+        const response = await sendChatMessage(message);
+        
+        // Add AI response to chat
+        addAIMessage(response);
+        
+    } catch (error) {
+        console.error('Chat error:', error);
+        addErrorMessage('Sorry, I encountered an error processing your request. Please try again.');
+    } finally {
+        showTypingIndicator(false);
+        isProcessing = false;
+        input.focus();
+    }
+}
+
+function addUserMessage(message) {
+    const messagesContainer = document.getElementById('chat-messages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message user slide-up';
+    
+    messageDiv.innerHTML = `
+        <div class="message-avatar">
+            <i class="bi bi-person-fill"></i>
+        </div>
+        <div class="message-content">
+            <div class="message-bubble">
+                ${escapeHtml(message)}
+            </div>
+            <div class="message-time">${formatTime(new Date())}</div>
+            <div class="message-actions">
+                <button class="message-action" onclick="editMessage(this)" title="Edit">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button class="message-action" onclick="copyMessage(this)" title="Copy">
+                    <i class="bi bi-copy"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    
+    messagesContainer.appendChild(messageDiv);
+    scrollToBottom();
+}
+
+function addAIMessage(response) {
+    const messagesContainer = document.getElementById('chat-messages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message assistant slide-up';
+    
+    let messageContent = response.message || response.response || 'I apologize, but I could not process your request.';
+    
+    // Handle markdown or HTML in response
+    if (response.formatted) {
+        messageContent = response.formatted;
+    } else {
+        messageContent = formatAIMessage(messageContent);
+    }
+    
+    messageDiv.innerHTML = `
+        <div class="message-avatar">
+            <i class="bi bi-robot"></i>
+        </div>
+        <div class="message-content">
+            <div class="message-bubble">
+                ${messageContent}
+            </div>
+            <div class="message-time">${formatTime(new Date())}</div>
+            <div class="message-actions">
+                <button class="message-action" onclick="speakMessage(this)" title="Read aloud">
+                    <i class="bi bi-volume-up"></i>
+                </button>
+                <button class="message-action" onclick="copyMessage(this)" title="Copy">
+                    <i class="bi bi-copy"></i>
+                </button>
+                <button class="message-action" onclick="shareMessage(this)" title="Share">
+                    <i class="bi bi-share"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    
+    messagesContainer.appendChild(messageDiv);
+    
+    // Handle visualization if provided
+    if (response.visualization) {
+        addVisualization(response.visualization);
+    }
+    
+    // Auto-speak if voice is enabled and auto-speak is on
+    if (window.voiceManager && window.voiceManager.settings && window.voiceManager.settings.autoSpeak) {
+        setTimeout(() => speakMessage(messageDiv.querySelector('.message-action')), 500);
+    }
+    
+    scrollToBottom();
+}
+
+function addVisualization(vizConfig) {
+    const messagesContainer = document.getElementById('chat-messages');
+    const vizDiv = document.createElement('div');
+    vizDiv.className = 'message assistant slide-up';
+    
+    vizDiv.innerHTML = `
+        <div class="message-avatar">
+            <i class="bi bi-graph-up"></i>
+        </div>
+        <div class="message-content">
+            <div class="message-bubble">
+                <div class="visualization-container">
+                    <h6>${vizConfig.title || 'Data Visualization'}</h6>
+                    <div id="viz-${Date.now()}" class="chart-container" style="height: 300px;">
+                        <div class="chart-loading">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p>Loading visualization...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="message-time">${formatTime(new Date())}</div>
+        </div>
+    `;
+    
+    messagesContainer.appendChild(vizDiv);
+    
+    // Load visualization
+    setTimeout(() => {
+        loadVisualization(vizDiv.querySelector('.chart-container'), vizConfig);
+    }, 100);
+    
+    scrollToBottom();
+}
+
+function addErrorMessage(message) {
+    const messagesContainer = document.getElementById('chat-messages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message assistant slide-up';
+    
+    messageDiv.innerHTML = `
+        <div class="message-avatar">
+            <i class="bi bi-exclamation-triangle"></i>
+        </div>
+        <div class="message-content">
+            <div class="message-bubble" style="border-left: 4px solid var(--coral);">
+                <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                ${escapeHtml(message)}
+            </div>
+            <div class="message-time">${formatTime(new Date())}</div>
+        </div>
+    `;
+    
+    messagesContainer.appendChild(messageDiv);
+    scrollToBottom();
+}
+
+async function sendChatMessage(message) {
+    const payload = {
+        message: message,
+        conversation_id: conversationId,
+        language: window.floatChat ? window.floatChat.currentLanguage : 'en',
+        include_visualization: true
+    };
+    
+    const response = await fetch('/api/v1/chat/query', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+    });
+    
+    if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    return await response.json();
+}
+
+function showTypingIndicator(show) {
+    const indicator = document.getElementById('typing-indicator');
+    if (show) {
+        indicator.style.display = 'flex';
+        scrollToBottom();
+    } else {
+        indicator.style.display = 'none';
+    }
+}
+
+function scrollToBottom() {
+    const messagesContainer = document.getElementById('chat-messages');
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+function formatTime(date) {
+    if (window.i18n && window.i18n.formatDate) {
+        return window.i18n.formatDate(date, { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+    }
+    
+    return date.toLocaleTimeString([], { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+}
+
+function formatAIMessage(message) {
+    // Convert markdown-like formatting to HTML
+    return message
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/`(.*?)`/g, '<code>$1</code>')
+        .replace(/\n/g, '<br>');
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function generateConversationId() {
+    return 'chat_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
+// Message action functions
+function speakMessage(button) {
+    if (!window.voiceManager) {
+        window.floatChat.showNotification('Voice not available', 'warning');
+        return;
+    }
+    
+    const messageContent = button.closest('.message-content').querySelector('.message-bubble');
+    const text = messageContent.textContent || messageContent.innerText;
+    
+    window.voiceManager.speak(text).catch(error => {
+        console.error('Speech synthesis failed:', error);
+        window.floatChat.showNotification('Speech synthesis failed', 'error');
+    });
+}
+
+function copyMessage(button) {
+    const messageContent = button.closest('.message-content').querySelector('.message-bubble');
+    const text = messageContent.textContent || messageContent.innerText;
+    
+    if (window.floatChat) {
+        window.floatChat.copyToClipboard(text);
+    } else {
+        navigator.clipboard.writeText(text);
+    }
+}
+
+function shareMessage(button) {
+    const messageContent = button.closest('.message-content').querySelector('.message-bubble');
+    const text = messageContent.textContent || messageContent.innerText;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: 'FloatChat Response',
+            text: text
+        });
+    } else {
+        copyMessage(button);
+        window.floatChat.showNotification('Message copied to clipboard for sharing', 'info');
+    }
+}
+
+function editMessage(button) {
+    // Implementation for editing user messages
+    const messageContent = button.closest('.message-content').querySelector('.message-bubble');
+    const text = messageContent.textContent || messageContent.innerText;
+    
+    document.getElementById('chat-input').value = text;
+    document.getElementById('chat-input').focus();
+}
+
+// Quick action functions
+function insertQuickQuery(query) {
+    const input = document.getElementById('chat-input');
+    input.value = query;
+    input.dispatchEvent(new Event('input'));
+    input.focus();
+}
+
+function clearChat() {
+    if (confirm('Are you sure you want to clear the conversation?')) {
+        const messagesContainer = document.getElementById('chat-messages');
+        
+        // Keep only the welcome message
+        const welcomeMessage = messagesContainer.querySelector('.message.assistant');
+        messagesContainer.innerHTML = '';
+        messagesContainer.appendChild(welcomeMessage);
+        
+        // Generate new conversation ID
+        conversationId = generateConversationId();
+        
+        window.floatChat.showNotification('Conversation cleared', 'success', 2000);
+    }
+}
+
+function exportChat() {
+    const messages = Array.from(document.querySelectorAll('.message')).map(msg => {
+        const isUser = msg.classList.contains('user');
+        const content = msg.querySelector('.message-bubble').textContent;
+        const time = msg.querySelector('.message-time').textContent;
+        
+        return {
+            sender: isUser ? 'User' : 'AI',
+            message: content,
+            timestamp: time
+        };
+    });
+    
+    const exportData = {
+        conversation_id: conversationId,
+        export_date: new Date().toISOString(),
+        messages: messages
+    };
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const filename = `floatchat_conversation_${new Date().toISOString().split('T')[0]}.json`;
+    
+    if (window.floatChat) {
+        window.floatChat.downloadFile(dataStr, filename, 'application/json');
+    }
+}
+
+function shareChat() {
+    const url = `${window.location.origin}/chat/shared/${conversationId}`;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: 'FloatChat Conversation',
+            url: url
+        });
+    } else {
+        if (window.floatChat) {
+            window.floatChat.copyToClipboard(url);
+            window.floatChat.showNotification('Share link copied to clipboard', 'success');
+        }
+    }
+}
+
+// File upload functions
+function attachFile() {
+    const modal = new bootstrap.Modal(document.getElementById('fileUploadModal'));
+    modal.show();
+}
+
+function uploadFile() {
+    const fileInput = document.getElementById('fileInput');
+    const description = document.getElementById('fileDescription').value;
+    
+    if (!fileInput.files[0]) {
+        window.floatChat.showNotification('Please select a file', 'warning');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    formData.append('description', description);
+    formData.append('conversation_id', conversationId);
+    
+    // Show upload progress
+    window.floatChat.showLoading('Uploading file...');
+    
+    fetch('/api/v1/chat/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        window.floatChat.hideLoading();
+        
+        if (data.success) {
+            addUserMessage(`📎 Uploaded file: ${fileInput.files[0].name}`);
+            addAIMessage(data);
+            
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('fileUploadModal')).hide();
+            
+            // Reset form
+            fileInput.value = '';
+            document.getElementById('fileDescription').value = '';
+        } else {
+            throw new Error(data.error || 'Upload failed');
+        }
+    })
+    .catch(error => {
+        window.floatChat.hideLoading();
+        console.error('Upload error:', error);
+        window.floatChat.showNotification('File upload failed', 'error');
+    });
+}
+
+function loadVisualization(container, config) {
+    // Implementation would load actual visualization based on config
+    container.innerHTML = `
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            Visualization: ${config.title}
+            <br><small>Chart type: ${config.plot_type}</small>
+        </div>
+    `;
+}
+</script>
+{% endblock %}

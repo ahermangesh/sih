@@ -1,0 +1,476 @@
+# FloatChat - Professional .gitignore
+# AI-Powered Conversational Interface for ARGO Ocean Data Discovery and Visualization
+
+# =============================================================================
+# ARCHIVE AND LEGACY FILES
+# =============================================================================
+archive/
+legacy/
+old/
+backup/
+
+# =============================================================================
+# ARGO DATASET AND LARGE DATA FILES (DO NOT COMMIT TO GITHUB)
+# =============================================================================
+# ARGO NetCDF dataset (2,056 files, 9.77GB)
+argo_data/
+data/argo/
+netcdf_files/
+*.nc
+*.netcdf
+
+# Processed data exports
+data/processed/
+data/exports/
+data/cache/
+exports/
+processed_data/
+
+# Vector database storage
+data/chromadb/
+data/faiss/
+data/vector_db/
+vector_db/
+chromadb/
+faiss_index/
+*.faiss
+*.index
+
+# Database dumps and backups
+*.sql
+*.dump
+*.backup
+database_backups/
+db_dumps/
+
+# Large log files and processing outputs
+*.log
+logs/
+processing_logs/
+vector_index.log
+parallel_extract.log
+data_processing.log
+complete_netcdf_extractor.log
+real_data_processor.log
+
+# Data processing script outputs (keep scripts in repo)
+# Note: The .py scripts themselves are kept in the repo
+*_output.txt
+*_results.json
+processing_results/
+extraction_results/
+
+# Temporary processing files
+temp/
+tmp/
+temporary/
+scratch/
+working/
+
+# Python cache and compiled files from processing
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Jupyter notebook checkpoints (if any)
+.ipynb_checkpoints/
+
+# =============================================================================
+# PYTHON
+# =============================================================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# pdm
+.pdm.toml
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# =============================================================================
+# DATA FILES
+# =============================================================================
+# Large data files (keep structure, ignore content for Git)
+data/processed/
+data/cache/
+data/temp/
+data/exports/
+*.nc
+*.hdf5
+*.h5
+*.parquet
+*.feather
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+database/
+db_backups/
+
+# CSV and data files (large ones)
+*_large.csv
+*_processed.csv
+*_cache.csv
+
+# =============================================================================
+# AI/ML MODELS AND CACHE
+# =============================================================================
+# Model files
+models/
+*.pkl
+*.joblib
+*.model
+*.bin
+*.pt
+*.pth
+*.onnx
+*.tflite
+*.pb
+
+# Vector databases
+vector_db/
+faiss_index/
+chroma_db/
+embeddings/
+*.index
+*.faiss
+
+# Hugging Face cache
+.cache/
+transformers_cache/
+sentence_transformers_cache/
+
+# =============================================================================
+# AUDIO FILES
+# =============================================================================
+# Audio processing temporary files
+audio_temp/
+*.wav
+*.mp3
+*.ogg
+*.flac
+*.m4a
+*.wma
+recordings/
+tts_cache/
+
+# =============================================================================
+# API KEYS AND SECRETS
+# =============================================================================
+# Environment variables and secrets
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.staging
+config/secrets.py
+secrets.json
+credentials.json
+service-account.json
+*.pem
+*.key
+*.crt
+*.p12
+
+# API keys
+*api_key*
+*secret*
+*token*
+*password*
+
+# =============================================================================
+# DOCKER
+# =============================================================================
+# Docker
+.dockerignore
+docker-compose.override.yml
+.docker/
+
+# =============================================================================
+# DATABASES
+# =============================================================================
+# PostgreSQL
+*.dump
+*.sql.gz
+pgdata/
+postgres_data/
+
+# Redis
+dump.rdb
+redis_data/
+
+# =============================================================================
+# LOGS AND MONITORING
+# =============================================================================
+# Logs
+logs/
+*.log
+*.log.*
+log_*
+application.log
+error.log
+access.log
+debug.log
+
+# Monitoring and metrics
+metrics/
+monitoring/
+grafana_data/
+prometheus_data/
+
+# =============================================================================
+# FRONTEND
+# =============================================================================
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Streamlit
+.streamlit/
+streamlit_cache/
+
+# Static files
+static/uploads/
+static/temp/
+media/
+
+# =============================================================================
+# DEVELOPMENT TOOLS
+# =============================================================================
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.jupyter/
+jupyter_cache/
+
+# Pre-commit
+.pre-commit-config.yaml.bak
+
+# =============================================================================
+# TESTING
+# =============================================================================
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+test_results/
+test_reports/
+screenshots/
+
+# =============================================================================
+# DEPLOYMENT
+# =============================================================================
+# Deployment
+deploy/
+deployment/
+k8s/secrets/
+terraform.tfstate
+terraform.tfstate.backup
+.terraform/
+
+# Cloud specific
+.aws/
+.gcp/
+.azure/
+
+# =============================================================================
+# TEMPORARY FILES
+# =============================================================================
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# =============================================================================
+# PROJECT SPECIFIC
+# =============================================================================
+# FloatChat specific ignores
+exports/
+user_uploads/
+chat_history/
+voice_recordings/
+visualization_cache/
+query_cache/
+
+# Performance profiling
+*.prof
+profiling_results/
+
+# Documentation builds
+docs/build/
+docs/_build/
+
+# =============================================================================
+# KEEP THESE FILES (NEGATIVE PATTERNS)
+# =============================================================================
+# Keep essential data structure files
+!data/.gitkeep
+!data/sample/
+!argo_data/.gitkeep
+!docs/
+!tests/
+
+# Keep configuration templates
+!.env.example
+!config/settings.example.py
+
+# Keep essential documentation
+!README.md
+!CONTRIBUTING.md
+!LICENSE
+!CHANGELOG.md
