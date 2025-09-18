@@ -68,11 +68,6 @@ const MapView: React.FC = () => {
     <div className="map-view">
       <div className="map-header">
         <h2>Argo Float Locations - Indian Ocean Region</h2>
-        <div className="map-controls">
-          <button className="map-btn">Live Feed</button>
-          <button className="map-btn">Historical</button>
-          <button className="map-btn">Predictions</button>
-        </div>
       </div>
 
       <div className="map-container">

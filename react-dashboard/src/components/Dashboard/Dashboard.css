@@ -6,9 +6,70 @@
   overflow: hidden;
 }
 
+.sidebar-container {
+  flex-shrink: 0;
+  background: #f8fafc;
+  border-right: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.right-panel-container {
+  flex-shrink: 0;
+  background: #ffffff;
+  border-left: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
 .main-content {
   flex: 1;
   position: relative;
   background: white;
   overflow: hidden;
+  min-width: 400px;
+}
+
+.resize-handle {
+  width: 8px;
+  cursor: col-resize;
+  background: rgba(99, 102, 241, 0.1);
+  position: relative;
+  z-index: 10;
+  transition: background-color 0.2s ease;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.resize-handle:hover {
+  background: rgba(99, 102, 241, 0.3);
+}
+
+.resize-handle:active {
+  background: rgba(99, 102, 241, 0.5);
+}
+
+.left-handle {
+  border-right: 1px solid #e5e7eb;
+}
+
+.right-handle {
+  border-left: 1px solid #e5e7eb;
+}
+
+/* Add visual indicator on hover */
+.resize-handle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 40px;
+  background: #d1d5db;
+  border-radius: 1px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.resize-handle:hover::after {
+  opacity: 1;
 }
