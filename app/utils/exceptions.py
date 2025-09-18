@@ -83,6 +83,11 @@ class DataNotFoundError(FloatChatException):
     pass
 
 
+class ChatProcessingError(FloatChatException):
+    """Exception raised during chat processing operations."""
+    pass
+
+
 # =============================================================================
 # HTTP EXCEPTION MAPPERS
 # =============================================================================

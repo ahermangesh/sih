@@ -14,14 +14,14 @@ from typing import Dict, Any
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 import structlog
 
 from app.core.config import get_settings
 from app.core.database import init_database, close_database
-from app.core.security import setup_security_headers
-from app.api import chat, voice, floats, visualize, dashboard, websocket, real_chat
+from app.core.security import setup_security_headers, add_security_headers_to_response
+from app.api import chat, voice, floats, dashboard, websocket, real_chat
 from app.utils.exceptions import setup_exception_handlers
 
 # Configure structured logging
@@ -107,11 +107,14 @@ def create_app() -> FastAPI:
         lifespan=lifespan
     )
     
+    # Setup security middleware and CORS
+    setup_security_headers(app)
+    
     # Add security headers middleware
     @app.middleware("http")
     async def add_security_headers(request: Request, call_next):
         response = await call_next(request)
-        return setup_security_headers(response)
+        return add_security_headers_to_response(response)
     
     # Add request logging middleware
     @app.middleware("http")
@@ -180,6 +183,16 @@ def create_app() -> FastAPI:
     # Setup exception handlers
     setup_exception_handlers(app)
     
+    # Add test page route
+    @app.get("/test", response_class=HTMLResponse)
+    async def test_page():
+        """Serve the test HTML page."""
+        try:
+            with open("test_api.html", "r", encoding="utf-8") as f:
+                return HTMLResponse(content=f.read())
+        except FileNotFoundError:
+            return HTMLResponse(content="<h1>Test page not found</h1><p>test_api.html is missing</p>")
+    
     # Include API routers
     app.include_router(
         real_chat.router,
@@ -199,11 +212,6 @@ def create_app() -> FastAPI:
         tags=["ARGO Float Data"]
     )
     
-    app.include_router(
-        visualize.router,
-        prefix=f"{settings.api_v1_prefix}/visualize",
-        tags=["Data Visualization"]
-    )
     
     app.include_router(
         dashboard.router,

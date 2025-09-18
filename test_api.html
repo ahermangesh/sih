@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FloatChat API Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            border-left: 4px solid #4CAF50;
+        }
+        button {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .success { border-left: 4px solid #4CAF50; }
+        .error { border-left: 4px solid #f44336; }
+        .loading { opacity: 0.7; }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        h1, h2 { text-align: center; margin-bottom: 30px; }
+        .status { padding: 10px; border-radius: 8px; margin: 10px 0; }
+        .online { background: rgba(76, 175, 80, 0.3); }
+        .offline { background: rgba(244, 67, 54, 0.3); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌊 FloatChat API Test Dashboard</h1>
+        
+        <div class="test-section">
+            <h2>🔍 API Health Check</h2>
+            <button onclick="testHealth()">Test Health Endpoint</button>
+            <div id="healthResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🤖 AI Chat Test</h2>
+            <textarea id="chatInput" placeholder="Enter your ocean data question..." rows="3">What is the temperature of the Arabian Sea?</textarea>
+            <button onclick="testChat()">Send Chat Query</button>
+            <div id="chatResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🗺️ ARGO Data Test</h2>
+            <button onclick="testArgoData()">Get ARGO Floats</button>
+            <div id="argoResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎤 Voice Service Test</h2>
+            <button onclick="testVoice()">Test Voice Synthesis</button>
+            <div id="voiceResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 System Status</h2>
+            <div id="systemStatus">
+                <div class="status offline">🔴 Backend: Checking...</div>
+                <div class="status offline">🔴 Database: Checking...</div>
+                <div class="status offline">🔴 AI Service: Checking...</div>
+                <div class="status offline">🔴 Voice Service: Checking...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        
+        async function makeRequest(url, options = {}) {
+            try {
+                const response = await fetch(API_BASE + url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                return await response.json();
+            } catch (error) {
+                throw error;
+            }
+        }
+        
+        function updateResult(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            element.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+            element.className = `result ${isError ? 'error' : 'success'}`;
+        }
+        
+        function setLoading(elementId, isLoading) {
+            const element = document.getElementById(elementId);
+            if (isLoading) {
+                element.textContent = 'Loading...';
+                element.className = 'result loading';
+            }
+        }
+        
+        async function testHealth() {
+            setLoading('healthResult', true);
+            try {
+                const data = await makeRequest('/health');
+                updateResult('healthResult', data);
+                updateSystemStatus(data);
+            } catch (error) {
+                updateResult('healthResult', `❌ Health check failed: ${error.message}`, true);
+            }
+        }
+        
+        async function testChat() {
+            const query = document.getElementById('chatInput').value;
+            if (!query.trim()) {
+                updateResult('chatResult', '❌ Please enter a question', true);
+                return;
+            }
+            
+            setLoading('chatResult', true);
+            try {
+                const data = await makeRequest('/api/v1/chat/query', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        message: query,
+                        conversation_id: 'test-' + Date.now(),
+                        language: 'en',
+                        voice_input: false,
+                        voice_output: false
+                    })
+                });
+                updateResult('chatResult', data);
+            } catch (error) {
+                updateResult('chatResult', `❌ Chat test failed: ${error.message}`, true);
+            }
+        }
+        
+        async function testArgoData() {
+            setLoading('argoResult', true);
+            try {
+                const data = await makeRequest('/api/v1/floats?limit=5');
+                updateResult('argoResult', data);
+            } catch (error) {
+                updateResult('argoResult', `❌ ARGO data test failed: ${error.message}`, true);
+            }
+        }
+        
+        async function testVoice() {
+            setLoading('voiceResult', true);
+            try {
+                const data = await makeRequest('/api/v1/voice/synthesize', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        text: 'Hello from FloatChat! Ocean data analysis is working.',
+                        language: 'en'
+                    })
+                });
+                updateResult('voiceResult', data);
+            } catch (error) {
+                updateResult('voiceResult', `❌ Voice test failed: ${error.message}`, true);
+            }
+        }
+        
+        function updateSystemStatus(healthData) {
+            const statusDiv = document.getElementById('systemStatus');
+            const dependencies = healthData.dependencies || {};
+            const features = healthData.features || {};
+            
+            statusDiv.innerHTML = `
+                <div class="status ${healthData.status === 'healthy' ? 'online' : 'offline'}">
+                    ${healthData.status === 'healthy' ? '🟢' : '🔴'} Backend: ${healthData.status}
+                </div>
+                <div class="status ${dependencies.gemini_ai ? 'online' : 'offline'}">
+                    ${dependencies.gemini_ai ? '🟢' : '🔴'} AI Service: ${dependencies.gemini_ai ? 'Online' : 'Offline'}
+                </div>
+                <div class="status ${features.voice_processing ? 'online' : 'offline'}">
+                    ${features.voice_processing ? '🟢' : '🔴'} Voice Service: ${features.voice_processing ? 'Available' : 'Limited'}
+                </div>
+                <div class="status ${features.real_argo_data ? 'online' : 'offline'}">
+                    ${features.real_argo_data ? '🟢' : '🔴'} ARGO Data: ${features.real_argo_data ? 'Available' : 'Offline'}
+                </div>
+            `;
+        }
+        
+        // Auto-test health on page load
+        window.addEventListener('load', () => {
+            setTimeout(testHealth, 1000);
+        });
+        
+        // Auto-refresh health every 30 seconds
+        setInterval(testHealth, 30000);
+    </script>
+</body>
+</html>

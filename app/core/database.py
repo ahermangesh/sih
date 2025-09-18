@@ -10,7 +10,7 @@ import logging
 from typing import AsyncGenerator, Optional, Any
 from contextlib import asynccontextmanager
 
-from sqlalchemy import create_engine, MetaData, event
+from sqlalchemy import create_engine, MetaData, event, text
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
     AsyncSession,
@@ -77,7 +77,6 @@ def create_async_database_engine():
     
     engine = create_async_engine(
         database_url,
-        poolclass=QueuePool,
         pool_size=settings.database_pool_size,
         max_overflow=settings.database_max_overflow,
         pool_timeout=settings.database_pool_timeout,
@@ -114,13 +113,19 @@ async def init_database():
             autocommit=False
         )
         
-        # Test async connection
+        # Test async connection and enable PostGIS
+        try:
+            async with async_engine.begin() as conn:
+                # Enable PostGIS extensions
+                await conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis;"))
+                await conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis_topology;"))
+                logger.info("PostGIS extensions enabled successfully")
+        except Exception as e:
+            logger.warning(f"PostGIS extensions not available: {e}")
+            logger.info("Continuing without PostGIS - spatial features will be limited")
+        
+        # Test connection separately
         async with async_engine.begin() as conn:
-            # Enable PostGIS extensions
-            await conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis;"))
-            await conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis_topology;"))
-            
-            # Test connection
             result = await conn.execute(text("SELECT 1 as test"))
             test_value = result.scalar()
             
@@ -151,14 +156,29 @@ async def create_tables():
         )
         
         async with async_engine.begin() as conn:
-            # Create all tables
-            await conn.run_sync(Base.metadata.create_all)
-            
-        logger.info("Database tables created successfully")
+            # First create tables only (without indexes)
+            try:
+                await conn.run_sync(Base.metadata.create_all, checkfirst=True)
+                logger.info("Database tables created successfully")
+            except Exception as table_error:
+                logger.warning(f"Table creation issue (continuing): {table_error}")
+                
+                # Try creating indexes manually with IF NOT EXISTS
+                try:
+                    await conn.execute(text("""
+                        CREATE INDEX IF NOT EXISTS idx_argo_profiles_float_cycle ON argo_profiles (float_id, cycle_number);
+                        CREATE INDEX IF NOT EXISTS idx_argo_profiles_date ON argo_profiles (profile_date);
+                        CREATE INDEX IF NOT EXISTS idx_argo_profiles_location ON argo_profiles USING gist (location);
+                        CREATE INDEX IF NOT EXISTS idx_argo_profiles_data_mode ON argo_profiles (data_mode);
+                    """))
+                    logger.info("Manual index creation completed")
+                except Exception as index_error:
+                    logger.warning(f"Manual index creation failed (continuing): {index_error}")
         
     except Exception as e:
         logger.error("Failed to create database tables", error=str(e), exc_info=True)
-        raise
+        # Don't raise - let the server start anyway
+        logger.warning("Continuing server startup despite database table creation issues")
 
 
 async def close_database():
@@ -253,6 +273,10 @@ def get_sync_db() -> Session:
         yield session
     finally:
         session.close()
+
+
+# Alias for backward compatibility
+get_db = get_async_db
 
 
 async def check_database_health() -> dict[str, Any]:
