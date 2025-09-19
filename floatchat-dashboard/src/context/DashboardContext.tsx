@@ -162,7 +162,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       console.log('Fetching dashboard data for filter:', currentFilter)
       
       // Fetch stats from backend
-      const statsResponse = await fetch('http://localhost:8000/api/v1/dashboard/stats')
+      const statsResponse = await fetch('http://localhost:8002/api/v1/dashboard/stats')
       if (!statsResponse.ok) {
         throw new Error('Failed to fetch dashboard stats')
       }
@@ -170,7 +170,7 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       console.log('Backend stats:', stats)
       
       // Fetch floats data for filtering
-      const floatsResponse = await fetch('http://localhost:8000/api/v1/dashboard/floats/locations')
+      const floatsResponse = await fetch('http://localhost:8002/api/v1/dashboard/floats/locations')
       if (!floatsResponse.ok) {
         throw new Error('Failed to fetch floats data')
       }

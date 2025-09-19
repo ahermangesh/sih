@@ -37,11 +37,14 @@ nlu_service: Optional[NLUService] = None
 
 
 async def get_rag_pipeline() -> RAGPipeline:
-    """Dependency to get RAG pipeline instance."""
+    """Dependency to get enhanced RAG pipeline instance with temporal support."""
     global rag_pipeline
     if rag_pipeline is None:
-        rag_pipeline = RAGPipeline()
+        # Use DefaultRAGPipeline which will be EnhancedRAGPipeline if available
+        from app.services.rag_service import DefaultRAGPipeline
+        rag_pipeline = DefaultRAGPipeline()
         await rag_pipeline.initialize()
+        logger.info("RAG pipeline initialized", type=type(rag_pipeline).__name__)
     return rag_pipeline
 
 

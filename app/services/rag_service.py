@@ -1044,3 +1044,18 @@ class RAGPipeline:
             await self.gemini_service.close()
         
         logger.info("RAG pipeline closed")
+
+
+# Import enhanced RAG pipeline for improved temporal query handling
+try:
+    from app.services.enhanced_rag_service import EnhancedRAGPipeline
+    # Use enhanced version as default for better temporal query support
+    DefaultRAGPipeline = EnhancedRAGPipeline
+    logger.info("Enhanced RAG pipeline loaded - temporal queries supported")
+except ImportError as e:
+    # Fallback to standard RAG if enhanced version not available
+    DefaultRAGPipeline = RAGPipeline
+    logger.warning(f"Enhanced RAG not available, using standard RAG: {e}")
+
+# Export both versions for flexibility
+__all__ = ['RAGPipeline', 'DefaultRAGPipeline', 'RAGResponse', 'DocumentChunk', 'RetrievalResult']

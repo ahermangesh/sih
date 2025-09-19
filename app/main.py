@@ -57,6 +57,13 @@ async def lifespan(app: FastAPI):
         await init_database()
         logger.info("Database initialized successfully")
         
+        # Log RAG service configuration
+        try:
+            from app.services.rag_service import DefaultRAGPipeline
+            logger.info("RAG service configured", pipeline_type=DefaultRAGPipeline.__name__)
+        except Exception as e:
+            logger.warning("RAG service configuration check failed", error=str(e))
+        
         # Initialize vector database
         # TODO: Initialize FAISS/ChromaDB
         

@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.config import get_settings
 from app.services.real_gemini_service import real_gemini_service
-from app.services.rag_service import RAGPipeline
+from app.services.enhanced_rag_service import EnhancedRAGPipeline
 from app.services.real_argo_service import real_argo_service
 from app.services.voice_service import voice_service
 from app.services.translation_service import multilingual_service
@@ -32,11 +32,11 @@ settings = get_settings()
 # Initialize RAG pipeline (singleton)
 rag_pipeline = None
 
-async def get_rag_pipeline() -> RAGPipeline:
-    """Get or initialize the RAG pipeline."""
+async def get_rag_pipeline() -> EnhancedRAGPipeline:
+    """Get or initialize the enhanced RAG pipeline."""
     global rag_pipeline
     if rag_pipeline is None:
-        rag_pipeline = RAGPipeline()
+        rag_pipeline = EnhancedRAGPipeline()
         await rag_pipeline.initialize()
     return rag_pipeline
 
@@ -255,34 +255,14 @@ async def process_rag_chat_query(
     )
     
     try:
-        # Use optimized RAG approach with caching and enhanced relevance scoring
-        rag_response = await get_optimized_rag_response(query.message, correlation_id)
-        
-        # Create mock RAG response object
-        class MockRAGResponse:
-            def __init__(self, response, contexts):
-                self.response = response
-                self.confidence_score = 0.85
-                self.query_analysis = None
-                self.retrieved_contexts = contexts
-                self.data_sources = ["ARGO Vector Database"]
-                self.visualization_config = None
-                self.sql_query = None
-                self.processing_time_ms = 0
-        
-        # Create response object from optimized RAG results
-        class OptimizedRAGResponse:
-            def __init__(self, rag_data):
-                self.response = rag_data['response']
-                self.confidence_score = min(0.95, 0.7 + rag_data['best_similarity']) if rag_data['best_similarity'] > 0 else 0.7
-                self.query_analysis = None
-                self.retrieved_contexts = [c['content'] for c in rag_data['contexts']]
-                self.data_sources = ["Optimized ARGO Vector Database"]
-                self.visualization_config = None
-                self.sql_query = None
-                self.processing_time_ms = int(rag_data['total_time'] * 1000)
-        
-        rag_response = OptimizedRAGResponse(rag_response)
+        # Use the Enhanced RAG Pipeline with temporal query detection
+        rag_pipeline = await get_rag_pipeline()
+        rag_response = await rag_pipeline.process_query(
+            query=query.message,
+            conversation_id=query.conversation_id,
+            user_preferences={"language": query.language},
+            correlation_id=correlation_id
+        )
         
         # Generate voice response if requested
         audio_response = None
@@ -298,6 +278,20 @@ async def process_rag_chat_query(
             except Exception as e:
                 logger.warning("Voice synthesis failed", error=str(e))
         
+        # Extract query type from enhanced RAG metadata
+        query_type = "unknown"
+        if rag_response.generation_metadata.get("query_analysis"):
+            query_type = rag_response.generation_metadata["query_analysis"]["intent"]
+        elif rag_response.generation_metadata.get("query_type"):
+            query_type = rag_response.generation_metadata["query_type"]
+        
+        # Prepare data sources
+        data_sources = ["Enhanced ARGO RAG Pipeline"]
+        if rag_response.generation_metadata.get("postgres_results_count", 0) > 0:
+            data_sources.append("PostgreSQL Temporal Database")
+        if len(rag_response.retrieved_contexts) > 0:
+            data_sources.append("ARGO Vector Database")
+        
         processing_time = (datetime.now() - start_time).total_seconds()
         
         return ChatQueryResponse(
@@ -307,16 +301,18 @@ async def process_rag_chat_query(
             timestamp=datetime.now(),
             processing_time=processing_time,
             confidence=rag_response.confidence_score,
-            query_type=rag_response.query_analysis.intent.value if rag_response.query_analysis else "unknown",
-            data_sources=rag_response.data_sources,
-            visualization=rag_response.visualization_config,
+            query_type=query_type,
+            data_sources=data_sources,
+            visualization=None,
             audio_response=audio_response,
             metadata={
                 "rag_used": True,
                 "contexts_retrieved": len(rag_response.retrieved_contexts),
                 "sql_query": rag_response.sql_query,
                 "processing_time_ms": rag_response.processing_time_ms,
-                "correlation_id": correlation_id
+                "correlation_id": correlation_id,
+                "temporal_info": rag_response.generation_metadata.get("temporal_info"),
+                "postgres_results_count": rag_response.generation_metadata.get("postgres_results_count", 0)
             }
         )
         
