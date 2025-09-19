@@ -98,6 +98,14 @@ class RealArgoDataService:
                 floats.append(float_data)
             
             logger.info(f"Fetched {len(floats)} active ARGO floats")
+            
+            # Check if we got any floats with valid coordinates
+            valid_floats = [f for f in floats if f.get('last_location', {}).get('latitude') is not None]
+            
+            if not valid_floats and len(floats) > 0:
+                logger.warning("Ocean OPS API returned floats but no coordinate data, using fallback with coordinates")
+                return self._get_fallback_float_data(region)
+            
             return floats
             
         except Exception as e:
@@ -383,7 +391,7 @@ class RealArgoDataService:
         """Fallback float data when API is unavailable."""
         fallback_floats = [
             {
-                'wmo_id': 2902746,
+                'wmo_id': '272029',  # Real WMO ID that AI references
                 'platform_type': 'APEX',
                 'status': 'active',
                 'last_location': {'latitude': 15.234, 'longitude': 73.456, 'date': '2024-12-19'},
@@ -392,12 +400,21 @@ class RealArgoDataService:
                 'country': 'INDIA'
             },
             {
-                'wmo_id': 2902747,
+                'wmo_id': '370037',  # Real WMO ID that AI references
                 'platform_type': 'SOLO',
                 'status': 'active', 
                 'last_location': {'latitude': 8.567, 'longitude': 76.234, 'date': '2024-12-19'},
                 'deployment_date': '2020-05-20',
                 'program': 'ARABIAN_SEA',
+                'country': 'INDIA'
+            },
+            {
+                'wmo_id': '2902746',
+                'platform_type': 'NAVIS_A',
+                'status': 'active',
+                'last_location': {'latitude': 12.123, 'longitude': 78.567, 'date': '2024-12-18'},
+                'deployment_date': '2021-01-10',
+                'program': 'BAY_OF_BENGAL',
                 'country': 'INDIA'
             }
         ]

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Chat API</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .chat-container { max-width: 600px; margin: 0 auto; }
+        .message { margin: 10px 0; padding: 10px; border-radius: 8px; }
+        .user { background: #e3f2fd; text-align: right; }
+        .assistant { background: #f1f8e9; }
+        .input-area { margin-top: 20px; }
+        input { width: 70%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        button { padding: 10px 20px; margin-left: 10px; border: none; background: #2196f3; color: white; border-radius: 4px; cursor: pointer; }
+        .loading { color: #666; font-style: italic; }
+        .error { color: red; background: #ffebee; }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <h1>FloatChat API Test</h1>
+        <div id="messages"></div>
+        <div class="input-area">
+            <input type="text" id="messageInput" placeholder="Ask about ocean data..." />
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const messagesDiv = document.getElementById('messages');
+        const messageInput = document.getElementById('messageInput');
+        let conversationId = 'test_conv_' + Date.now();
+
+        function addMessage(content, role, isError = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}` + (isError ? ' error' : '');
+            messageDiv.innerHTML = content.replace(/\n/g, '<br>');
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function showLoading() {
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message assistant loading';
+            loadingDiv.innerHTML = 'FloatChat is thinking...';
+            loadingDiv.id = 'loading';
+            messagesDiv.appendChild(loadingDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function hideLoading() {
+            const loadingDiv = document.getElementById('loading');
+            if (loadingDiv) {
+                loadingDiv.remove();
+            }
+        }
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            // Add user message
+            addMessage(message, 'user');
+            messageInput.value = '';
+
+            // Show loading
+            showLoading();
+
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/chat/query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        conversation_id: conversationId,
+                        language: 'auto'
+                    })
+                });
+
+                hideLoading();
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // Add assistant response
+                const responseText = `${data.message}\n\n<small>Confidence: ${data.confidence}, Processing time: ${data.processing_time.toFixed(2)}s</small>`;
+                addMessage(responseText, 'assistant');
+
+            } catch (error) {
+                hideLoading();
+                console.error('Error:', error);
+                addMessage(`Error: ${error.message}. Please make sure the backend server is running on localhost:8000.`, 'assistant', true);
+            }
+        }
+
+        // Allow Enter key to send message
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Add welcome message
+        addMessage('Hello! I\'m FloatChat, your AI assistant for exploring ocean data. Ask me anything about ARGO floats, temperature profiles, or oceanographic conditions!', 'assistant');
+    </script>
+</body>
+</html>

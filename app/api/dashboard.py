@@ -248,19 +248,27 @@ async def get_float_locations(
                 region = {'west': 30, 'south': -40, 'east': 120, 'north': 30}  # Indian Ocean
             
             real_floats = await real_argo_service.fetch_active_floats(region)
+            logger.info(f"Fetched {len(real_floats)} floats from real service")
             
             locations = []
+            valid_coords_count = 0
+            
             for float_data in real_floats[:limit]:
                 if status_filter and status_filter != 'all' and float_data.get('status') != status_filter:
                     continue
                     
                 last_loc = float_data.get('last_location', {})
-                if last_loc.get('latitude') and last_loc.get('longitude'):
+                lat = last_loc.get('latitude')
+                lon = last_loc.get('longitude')
+                
+                # Check if coordinates are valid (not None and not empty)
+                if lat is not None and lon is not None and lat != '' and lon != '':
+                    valid_coords_count += 1
                     location = FloatLocationResponse(
                         float_id=f"ARGO_{float_data['wmo_id']}",
                         wmo_id=float_data['wmo_id'],
-                        latitude=last_loc['latitude'],
-                        longitude=last_loc['longitude'],
+                        latitude=float(lat),
+                        longitude=float(lon),
                         last_position_date=datetime.fromisoformat(last_loc['date']) if last_loc.get('date') else datetime.utcnow(),
                         status=float_data.get('status', 'unknown'),
                         platform_type=float_data.get('platform_type', 'UNKNOWN'),
@@ -274,9 +282,14 @@ async def get_float_locations(
                     )
                     locations.append(location)
             
+            logger.info(f"Found {valid_coords_count} floats with valid coordinates out of {len(real_floats)}")
+            
             if locations:
                 logger.info("Real ARGO float locations retrieved", count=len(locations))
                 return locations
+            else:
+                # If no valid coordinates found, log this and fall back gracefully
+                logger.warning("No floats with valid coordinates found in real data, using fallback")
             
         except Exception as e:
             logger.warning(f"Failed to fetch real ARGO data, using fallback: {e}")
@@ -382,6 +395,87 @@ async def get_float_locations(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve float locations"
+        )
+
+
+@router.get(
+    "/floats/2024",
+    response_model=List[FloatLocationResponse],
+    summary="Get all 2024 ARGO float locations",
+    description="Returns all ARGO float profile locations from 2024 for map visualization."
+)
+async def get_2024_float_locations(
+    month: Optional[int] = Query(None, ge=1, le=12, description="Filter by month (1-12)"),
+    limit: int = Query(default=5000, ge=1, le=10000, description="Maximum number of float locations to return"),
+    db: AsyncSession = Depends(get_db)
+) -> List[FloatLocationResponse]:
+    """
+    Retrieve all ARGO float profile locations from 2024 for comprehensive map visualization.
+    
+    This endpoint fetches data from your vector database containing all 2024 ARGO profiles
+    and returns their geographic coordinates for plotting on a map.
+    """
+    try:
+        logger.info("Fetching 2024 float locations", month=month, limit=limit)
+        
+        # Build query for 2024 profiles
+        query = select(
+            ArgoProfile.id,
+            ArgoProfile.latitude,
+            ArgoProfile.longitude,
+            ArgoProfile.profile_date,
+            ArgoProfile.cycle_number,
+            ArgoFloat.wmo_id,
+            ArgoFloat.platform_type,
+            ArgoFloat.status
+        ).select_from(
+            ArgoProfile.__table__.join(ArgoFloat.__table__)
+        ).where(
+            func.extract('year', ArgoProfile.profile_date) == 2024
+        )
+        
+        # Add month filter if specified
+        if month:
+            query = query.where(func.extract('month', ArgoProfile.profile_date) == month)
+        
+        # Order by most recent profiles first
+        query = query.order_by(desc(ArgoProfile.profile_date)).limit(limit)
+        
+        result = await db.execute(query)
+        profiles = result.fetchall()
+        
+        locations = []
+        for profile in profiles:
+            # Skip if coordinates are invalid
+            if profile.latitude is None or profile.longitude is None:
+                continue
+                
+            location = FloatLocationResponse(
+                float_id=f"ARGO_{profile.wmo_id}_{profile.cycle_number}",
+                wmo_id=profile.wmo_id,
+                latitude=float(profile.latitude),
+                longitude=float(profile.longitude),
+                last_position_date=profile.profile_date,
+                status=profile.status or "unknown",
+                platform_type=profile.platform_type or "UNKNOWN",
+                last_profile_date=profile.profile_date,
+                cycle_number=profile.cycle_number,
+                metadata={
+                    "profile_id": profile.id,
+                    "year": 2024,
+                    "month": profile.profile_date.month if profile.profile_date else None
+                }
+            )
+            locations.append(location)
+        
+        logger.info("2024 float locations retrieved", count=len(locations), total_profiles=len(profiles))
+        return locations
+        
+    except Exception as e:
+        logger.error("Failed to fetch 2024 float locations", error=str(e), exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve 2024 float locations"
         )
 
 
