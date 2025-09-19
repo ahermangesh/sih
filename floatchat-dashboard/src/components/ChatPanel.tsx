@@ -98,7 +98,7 @@ export default function ChatPanel() {
       console.error('Failed to send message:', error)
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        content: 'Sorry, I encountered an error processing your request. Please check if the backend server is running on localhost:8002 and try again.',
+        content: 'Sorry, I encountered an error processing your request. Please check if the backend server is running on localhost:8000 and try again.',
         role: 'assistant',
         timestamp: new Date(),
         metadata: {

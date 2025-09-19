@@ -5,7 +5,6 @@ Fixes the issue where temporal queries (like "October 2024") are not properly ro
 
 import re
 import asyncio
-import uuid
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
@@ -192,8 +191,43 @@ class PostgreSQLQueryExecutor:
             logger.error(f"Error executing temporal query: {e}")
             return []
     
+    def _determine_query_limit(self, query: str, temporal_info: Dict[str, Any]) -> int:
+        """Determine appropriate limit based on query type and temporal scope."""
+        
+        # Analysis keywords suggest user wants comprehensive data
+        analysis_keywords = ['compare', 'analysis', 'trend', 'pattern', 'all', 'complete', 'comprehensive']
+        if any(keyword in query.lower() for keyword in analysis_keywords):
+            # For analysis queries, allow more data
+            if temporal_info.get('month'):
+                # Monthly data - moderate limit
+                return 500
+            elif temporal_info.get('year'):
+                # Yearly data - higher limit for comprehensive analysis
+                return 1000
+            else:
+                # Multi-year analysis - very high limit
+                return 2000
+        
+        # Specific data requests
+        show_keywords = ['show', 'display', 'list', 'get']
+        if any(keyword in query.lower() for keyword in show_keywords):
+            # For display queries, reasonable limit
+            if temporal_info.get('month'):
+                return 300
+            else:
+                return 500
+        
+        # Data availability checks
+        availability_keywords = ['available', 'have', 'exists', 'contains']
+        if any(keyword in query.lower() for keyword in availability_keywords):
+            # For availability checks, sample is sufficient
+            return 100
+        
+        # Default limit
+        return 250
+
     def _build_temporal_sql(self, query: str, temporal_info: Dict[str, Any]) -> str:
-        """Build SQL query for temporal data retrieval."""
+        """Build SQL query for temporal data retrieval with intelligent limits."""
         
         # Determine what data to query based on user request
         if any(word in query.lower() for word in ['profile', 'measurement', 'temperature', 'salinity']):
@@ -206,6 +240,9 @@ class PostgreSQLQueryExecutor:
             # Default to profiles for oceanographic data
             base_table = 'argo_profiles'
             date_column = 'profile_date'
+        
+        # Determine intelligent limit based on query type and temporal scope
+        limit = self._determine_query_limit(query, temporal_info)
         
         # Build base query
         if base_table == 'argo_profiles':
@@ -256,10 +293,10 @@ class PostgreSQLQueryExecutor:
         else:
             sql += " GROUP BY f.id, f.wmo_id, f.platform_type, f.deployment_date, f.deployment_latitude, f.deployment_longitude, f.status"
         
-        # Add ORDER BY
-        sql += f" ORDER BY {date_column} DESC LIMIT 100"
+        # Add ORDER BY with intelligent limit
+        sql += f" ORDER BY {date_column} DESC LIMIT {limit}"
         
-        logger.info(f"Generated temporal SQL: {sql}")
+        logger.info(f"Generated temporal SQL with limit {limit}: {sql}")
         return sql
 
 
@@ -306,7 +343,7 @@ class EnhancedRAGPipeline(RAGPipeline):
                 postgres_results = await self.postgres_executor.execute_temporal_query(query, temporal_info)
                 
                 # Generate response using PostgreSQL data
-                response_text = self._generate_temporal_response(query, postgres_results, temporal_info)
+                response_text = await self._generate_intelligent_temporal_response(query, postgres_results, temporal_info)
                 
                 # Calculate confidence based on results found
                 confidence_score = 0.9 if postgres_results else 0.1
@@ -334,20 +371,63 @@ class EnhancedRAGPipeline(RAGPipeline):
                 )
             
             else:
-                # Use simple fallback for non-temporal queries  
-                logger.info("Non-temporal query, using simple fallback")
-                processing_time = int((datetime.utcnow() - start_time).total_seconds() * 1000)
+                # Route non-temporal queries through LLM as well
+                logger.info("Non-temporal query, routing through LLM for intelligent response")
                 
-                return RAGResponse(
-                    response=f"I understand you're asking about: {query}. However, this appears to be a non-temporal query that would require the full RAG pipeline with vector search capabilities.",
-                    confidence_score=0.5,
-                    retrieved_contexts=[],
-                    generation_metadata={
-                        "query_analysis": {
-                            "intent": "general",
-                            "confidence": 0.5,
-                            "language": "en"
+                try:
+                    # Import Gemini service for intelligent analysis
+                    from app.services.real_gemini_service import real_gemini_service
+                    
+                    # Create prompt for non-temporal queries
+                    general_prompt = f"""You are FloatChat, an expert oceanographer and ARGO float data specialist.
+
+USER QUERY: {query}
+
+This is a general oceanographic query that doesn't specify temporal constraints. Please provide a helpful response that:
+1. Addresses the user's question as best as possible
+2. Explains what type of ARGO float data might be relevant
+3. Suggests how they could refine their query for better results
+4. Provides relevant oceanographic context
+5. Maintains a professional, informative tone
+
+If the query is about specific data analysis, suggest including time periods, geographic regions, or specific measurements (temperature, salinity, pressure) for more targeted results."""
+
+                    # Get intelligent response from Gemini
+                    intelligent_response = await real_gemini_service._generate_response(general_prompt)
+                    
+                    processing_time = int((datetime.utcnow() - start_time).total_seconds() * 1000)
+                    
+                    return RAGResponse(
+                        response=intelligent_response,
+                        confidence_score=0.7,
+                        retrieved_contexts=[],
+                        generation_metadata={
+                            "query_analysis": {
+                                "intent": "general",
+                                "confidence": 0.7,
+                                "language": "en"
+                            },
+                            "query_type": "general",
+                            "correlation_id": correlation_id
                         },
+                        processing_time_ms=processing_time
+                    )
+                    
+                except Exception as e:
+                    logger.warning(f"LLM processing failed for non-temporal query: {e}")
+                    # Emergency fallback if LLM fails
+                    processing_time = int((datetime.utcnow() - start_time).total_seconds() * 1000)
+                    
+                    return RAGResponse(
+                        response=f"I understand you're asking about: {query}. I'm an oceanographic data assistant specializing in ARGO float data. Could you provide more specific details about the time period, geographic region, or type of measurements you're interested in?",
+                        confidence_score=0.5,
+                        retrieved_contexts=[],
+                        generation_metadata={
+                            "query_analysis": {
+                                "intent": "general",
+                                "confidence": 0.5,
+                                "language": "en"
+                            },
                         "query_type": "general",
                         "correlation_id": correlation_id
                     },
@@ -369,7 +449,138 @@ class EnhancedRAGPipeline(RAGPipeline):
                 processing_time_ms=processing_time
             )
     
-    def _generate_temporal_response(self, query: str, results: List[Dict[str, Any]], temporal_info: Dict[str, Any]) -> str:
+    async def _generate_intelligent_temporal_response(self, query: str, results: List[Dict[str, Any]], temporal_info: Dict[str, Any]) -> str:
+        """Generate intelligent response using LLM for ALL temporal queries."""
+        
+        # Always use LLM for consistent, intelligent responses
+        try:
+            # Import Gemini service for intelligent analysis
+            from app.services.real_gemini_service import real_gemini_service
+            
+            if not results:
+                temporal_desc = ""
+                if temporal_info['year'] and temporal_info['month']:
+                    month_names = ['', 'January', 'February', 'March', 'April', 'May', 'June',
+                                  'July', 'August', 'September', 'October', 'November', 'December']
+                    temporal_desc = f" for {month_names[temporal_info['month']]} {temporal_info['year']}"
+                elif temporal_info['year']:
+                    temporal_desc = f" for {temporal_info['year']}"
+                
+                # Use LLM even for no-data responses
+                no_data_prompt = f"""You are FloatChat, an expert oceanographer analyzing ARGO float data.
+
+USER QUERY: {query}
+
+SITUATION: No ARGO float data is available{temporal_desc}. The database might not contain data for this specific time period.
+
+Please provide a helpful response that:
+1. Explains that no data is available for the requested period
+2. Suggests alternative time periods or approaches
+3. Provides context about ARGO float data availability
+4. Maintains a professional, helpful tone
+
+Keep the response concise but informative."""
+
+                return await real_gemini_service._generate_response(no_data_prompt)
+            
+            # Prepare data summary for LLM
+            data_summary = self._prepare_data_summary(results, temporal_info)
+            
+            # Determine query type for appropriate analysis approach
+            query_lower = query.lower()
+            if any(word in query_lower for word in ['compare', 'comparison', 'versus', 'vs', 'difference', 'trend', 'analyze', 'analysis']):
+                analysis_type = "comparative analysis"
+            elif any(word in query_lower for word in ['show', 'display', 'list', 'get', 'find']):
+                analysis_type = "data presentation"
+            elif any(word in query_lower for word in ['available', 'exists', 'have', 'contains']):
+                analysis_type = "data availability assessment"
+            else:
+                analysis_type = "general oceanographic analysis"
+            
+            # Create enhanced prompt for all temporal queries
+            analysis_prompt = f"""You are FloatChat, an expert oceanographer analyzing ARGO float data.
+
+USER QUERY: {query}
+
+QUERY TYPE: {analysis_type}
+
+AVAILABLE DATA SUMMARY:
+{data_summary}
+
+Please provide a comprehensive response addressing the user's query. Include:
+1. Direct answer to their question
+2. Key insights from the data
+3. Specific measurements and trends
+4. Geographic coverage
+5. Any notable patterns or anomalies
+6. Scientific context and interpretation
+
+Make your response informative, scientifically accurate, and easy to understand. Use natural language and avoid presenting raw data dumps."""
+
+            # Get intelligent response from Gemini
+            intelligent_response = await real_gemini_service._generate_response(analysis_prompt)
+            return intelligent_response
+            
+        except Exception as e:
+            logger.warning(f"LLM analysis failed, using fallback response: {e}")
+            # Emergency fallback only if LLM completely fails
+            if not results:
+                return f"I don't have any ARGO float data available for your query. The database might not contain data for this specific time period."
+            else:
+                return f"I found {len(results)} ARGO profiles matching your query, but I'm unable to provide detailed analysis at the moment. Please try again."
+    
+    def _prepare_data_summary(self, results: List[Dict[str, Any]], temporal_info: Dict[str, Any]) -> str:
+        """Prepare a summary of the data for LLM analysis."""
+        if not results:
+            return "No data available."
+        
+        # Extract key statistics
+        total_profiles = len(results)
+        
+        # Get date range
+        dates = [r.get('profile_date', '') for r in results if r.get('profile_date')]
+        date_range = f"from {min(dates)} to {max(dates)}" if dates else "unknown date range"
+        
+        # Get geographic coverage
+        lats = [float(r.get('latitude', 0)) for r in results if r.get('latitude') is not None]
+        lons = [float(r.get('longitude', 0)) for r in results if r.get('longitude') is not None]
+        
+        geo_summary = ""
+        if lats and lons:
+            geo_summary = f"Geographic coverage: {min(lats):.2f}°N to {max(lats):.2f}°N, {min(lons):.2f}°E to {max(lons):.2f}°E"
+        
+        # Get temperature and salinity ranges if available
+        temps = [float(r.get('max_temperature', 0)) for r in results if r.get('max_temperature') is not None]
+        salinity = [float(r.get('max_salinity', 0)) for r in results if r.get('max_salinity') is not None]
+        
+        measurement_summary = ""
+        if temps:
+            measurement_summary += f"Temperature ranges from {min(temps):.2f}°C to {max(temps):.2f}°C. "
+        if salinity:
+            measurement_summary += f"Salinity ranges from {min(salinity):.2f} to {max(salinity):.2f} PSU."
+        
+        # Sample profiles for reference
+        sample_profiles = []
+        for i, result in enumerate(results[:3]):  # First 3 profiles as samples
+            float_id = result.get('wmo_id', 'Unknown')
+            date = result.get('profile_date', 'Unknown date')
+            lat = result.get('latitude', 0)
+            lon = result.get('longitude', 0)
+            sample_profiles.append(f"• Float {float_id} on {date} at ({lat:.2f}°, {lon:.2f}°)")
+        
+        summary = f"""ARGO FLOAT DATA SUMMARY:
+- Total profiles: {total_profiles}
+- Time period: {date_range}
+- {geo_summary}
+- {measurement_summary}
+
+Sample profiles:
+{chr(10).join(sample_profiles)}
+{'... and ' + str(total_profiles - 3) + ' more profiles.' if total_profiles > 3 else ''}"""
+
+        return summary
+
+    def _generate_simple_temporal_response(self, query: str, results: List[Dict[str, Any]], temporal_info: Dict[str, Any]) -> str:
         """Generate response for temporal queries using PostgreSQL results."""
         
         if not results:
