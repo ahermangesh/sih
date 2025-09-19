@@ -216,19 +216,31 @@ export function useSpeech(): UseSpeechResult {
 
     utterance.onstart = () => {
       setIsSpeaking(true)
+      console.log('Speech started')
     }
 
     utterance.onend = () => {
       setIsSpeaking(false)
+      console.log('Speech completed')
     }
 
-    utterance.onerror = () => {
+    utterance.onerror = (event) => {
       setIsSpeaking(false)
+      console.error('Speech error:', event.error)
     }
 
-    speechSynthesisRef.current = utterance
-    window.speechSynthesis.speak(utterance)
-  }, [ttsSupported])
+    // For longer texts, ensure voices are loaded
+    if (window.speechSynthesis.getVoices().length === 0) {
+      window.speechSynthesis.addEventListener('voiceschanged', () => {
+        const newVoice = getBestVoice()
+        if (newVoice) utterance.voice = newVoice
+        window.speechSynthesis.speak(utterance)
+      }, { once: true })
+    } else {
+      speechSynthesisRef.current = utterance
+      window.speechSynthesis.speak(utterance)
+    }
+  }, [ttsSupported, cleanTextForSpeech, getBestVoice])
 
   const stopSpeaking = useCallback(() => {
     if (!ttsSupported) return
