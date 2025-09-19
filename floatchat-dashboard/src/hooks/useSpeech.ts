@@ -131,16 +131,88 @@ export function useSpeech(): UseSpeechResult {
     setTranscript('')
   }, [])
 
+  // Helper function to clean markdown from text
+  const cleanTextForSpeech = useCallback((text: string): string => {
+    return text
+      // Remove markdown headers
+      .replace(/#{1,6}\s+/g, '')
+      // Remove bold markers
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      // Remove italic markers
+      .replace(/\*(.*?)\*/g, '$1')
+      // Remove bullet points
+      .replace(/^\s*[\*\-\+]\s+/gm, '')
+      // Remove numbered lists
+      .replace(/^\s*\d+\.\s+/gm, '')
+      // Remove code markers
+      .replace(/`([^`]+)`/g, '$1')
+      // Remove blockquote markers
+      .replace(/^\s*>\s+/gm, '')
+      // Clean up multiple spaces and newlines
+      .replace(/\n\s*\n/g, '. ')
+      .replace(/\s+/g, ' ')
+      // Add natural pauses after sections
+      .replace(/\.\s+([A-Z])/g, '... $1')
+      .trim()
+  }, [])
+
+  // Helper function to get the best male voice
+  const getBestVoice = useCallback(() => {
+    if (!ttsSupported) return null
+    
+    const voices = window.speechSynthesis.getVoices()
+    
+    // Priority order for male voices
+    const preferredVoices = [
+      'Microsoft David - English (United States)',
+      'Google US English Male',
+      'Alex',
+      'Daniel',
+      'Thomas',
+      'Microsoft Mark - English (United States)',
+    ]
+    
+    // First try to find a preferred male voice
+    for (const voiceName of preferredVoices) {
+      const voice = voices.find(v => v.name.includes(voiceName.split(' - ')[0]))
+      if (voice) return voice
+    }
+    
+    // Fallback: find any male voice
+    const maleVoice = voices.find(v => 
+      v.name.toLowerCase().includes('male') || 
+      v.name.toLowerCase().includes('david') ||
+      v.name.toLowerCase().includes('daniel') ||
+      v.name.toLowerCase().includes('alex') ||
+      v.name.toLowerCase().includes('mark')
+    )
+    if (maleVoice) return maleVoice
+    
+    // Final fallback: default voice
+    return voices.find(v => v.default) || voices[0] || null
+  }, [ttsSupported])
+
   const speak = useCallback((text: string) => {
     if (!ttsSupported || !text.trim()) return
 
     // Stop any ongoing speech
     window.speechSynthesis.cancel()
 
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.rate = 0.9
-    utterance.pitch = 1
-    utterance.volume = 1
+    // Clean the text for natural speech
+    const cleanText = cleanTextForSpeech(text)
+    
+    const utterance = new SpeechSynthesisUtterance(cleanText)
+    
+    // Set conversational voice parameters
+    utterance.rate = 0.85 // Slightly slower for clarity
+    utterance.pitch = 0.9 // Slightly lower pitch for male voice
+    utterance.volume = 0.9
+    
+    // Try to use a good male voice
+    const voice = getBestVoice()
+    if (voice) {
+      utterance.voice = voice
+    }
 
     utterance.onstart = () => {
       setIsSpeaking(true)

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import ReactMarkdown from 'react-markdown'
 import type { ChatMessage } from '@/types'
 import { useDashboard } from '@/context/DashboardContext'
 import { useSpeech } from '@/hooks/useSpeech'
@@ -94,11 +95,11 @@ export default function ChatPanel() {
       if (ttsSupported && response.content) {
         setTimeout(() => speak(response.content), 500) // Small delay to ensure UI updates first
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to send message:', error)
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        content: 'Sorry, I encountered an error processing your request. Please check if the backend server is running on localhost:8000 and try again.',
+        content: `Sorry, I encountered an error: ${error.message || 'Unknown error'}. Please check if the backend server is running on localhost:8000 and try again.`,
         role: 'assistant',
         timestamp: new Date(),
         metadata: {
@@ -213,7 +214,7 @@ export default function ChatPanel() {
                 {message.role === 'user' ? (
                   // User message with pastel container
                   <div className="bg-blue-100 text-gray-900 rounded-2xl px-4 py-3 shadow-sm">
-                    <p className="text-sm leading-relaxed font-medium">{message.content}</p>
+                    <div className="text-sm leading-relaxed font-medium">{message.content}</div>
                     {message.metadata && (
                       <div className="mt-2">
                         <span className="bg-white/60 px-2 py-1 rounded text-xs text-gray-600">
@@ -223,10 +224,30 @@ export default function ChatPanel() {
                     )}
                   </div>
                 ) : (
-                  // Assistant message without container - just text
+                  // Assistant message with markdown rendering
                   <div className="flex items-start">
                     <div>
-                      <p className="text-sm leading-relaxed text-gray-900 font-medium">{message.content}</p>
+                      <div className="text-sm leading-relaxed text-gray-900 font-medium prose prose-sm max-w-none">
+                        <ReactMarkdown
+                          components={{
+                            // Custom styling for markdown elements
+                            p: ({ children }) => <p className="mb-3 last:mb-0">{children}</p>,
+                            h1: ({ children }) => <h1 className="text-lg font-bold mb-3 text-gray-900">{children}</h1>,
+                            h2: ({ children }) => <h2 className="text-base font-bold mb-2 text-gray-900">{children}</h2>,
+                            h3: ({ children }) => <h3 className="text-sm font-bold mb-2 text-gray-900">{children}</h3>,
+                            strong: ({ children }) => <strong className="font-bold text-gray-900">{children}</strong>,
+                            em: ({ children }) => <em className="italic text-gray-800">{children}</em>,
+                            ul: ({ children }) => <ul className="list-disc ml-4 mb-3 space-y-1">{children}</ul>,
+                            ol: ({ children }) => <ol className="list-decimal ml-4 mb-3 space-y-1">{children}</ol>,
+                            li: ({ children }) => <li className="text-gray-800">{children}</li>,
+                            code: ({ children }) => <code className="bg-gray-100 px-1 py-0.5 rounded text-xs font-mono text-gray-900">{children}</code>,
+                            pre: ({ children }) => <pre className="bg-gray-100 p-3 rounded-lg overflow-x-auto text-xs font-mono mb-3">{children}</pre>,
+                            blockquote: ({ children }) => <blockquote className="border-l-4 border-blue-200 pl-4 py-2 bg-blue-50 rounded-r mb-3">{children}</blockquote>,
+                          }}
+                        >
+                          {message.content}
+                        </ReactMarkdown>
+                      </div>
                       {/* Text-to-Speech button for assistant messages */}
                       {ttsSupported && (
                         <button
