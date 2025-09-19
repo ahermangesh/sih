@@ -108,7 +108,7 @@ export default function HomePage() {
             className="w-16 h-16 border-4 border-ocean-200 border-t-ocean-500 rounded-full mx-auto mb-4"
           />
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
-            FloatChat
+            Dolphin
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
             Loading Ocean Data Explorer...
@@ -120,49 +120,7 @@ export default function HomePage() {
 
   return (
     <DashboardProvider>
-      <div className="min-h-screen bg-gradient-to-br from-ocean-50 via-white to-deep-50 dark:from-deep-950 dark:via-deep-900 dark:to-deep-800">
-      {/* Header */}
-      <header className="glass-effect border-b border-white/20 dark:border-gray-700/30 p-4 sticky top-0 z-50">
-        <div className="flex items-center justify-between">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex items-center space-x-3"
-          >
-            <div className="w-10 h-10 bg-gradient-to-br from-ocean-400 to-ocean-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">🌊</span>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-800 dark:text-white">
-                FloatChat
-              </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Ocean Data Explorer
-              </p>
-            </div>
-          </motion.div>
-          
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex items-center space-x-4"
-          >
-            <div className="hidden md:flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span>Connected to API</span>
-            </div>
-            <button
-              className="p-2 hover:bg-white/10 dark:hover:bg-gray-800/50 rounded-lg transition-colors"
-              title="Settings"
-            >
-              ⚙️
-            </button>
-          </motion.div>
-        </div>
-      </header>
-
-      {/* Main Layout */}
-      <div className="h-[calc(100vh-80px)] flex">
+      <div className="h-screen bg-gradient-to-br from-ocean-50 via-white to-deep-50 dark:from-deep-950 dark:via-deep-900 dark:to-deep-800 flex">
         {/* Left Panel - Resizable Chat Interface */}
         <motion.div
           initial={{ opacity: 0, x: -50 }}
@@ -227,7 +185,6 @@ export default function HomePage() {
           {show2024Map ? <InteractiveMap2024 /> : <InteractiveMapHardcoded />}
         </motion.div>
       </div>
-    </div>
     </DashboardProvider>
   )
 }

@@ -6,12 +6,12 @@ import { Providers } from './providers'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'FloatChat - Ocean Data Explorer',
+  title: 'Dolphin - Ocean Data Explorer',
   description: 'AI-Powered Conversational Interface for ARGO Ocean Data Discovery and Visualization',
   keywords: ['ocean data', 'ARGO floats', 'AI', 'chat interface', 'oceanography', 'marine science'],
-  authors: [{ name: 'FloatChat Team' }],
-  creator: 'FloatChat Team',
-  publisher: 'FloatChat Team',
+  authors: [{ name: 'Dolphin Team' }],
+  creator: 'Dolphin Team',
+  publisher: 'Dolphin Team',
   robots: {
     index: true,
     follow: true,
@@ -20,13 +20,13 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: 'http://localhost:3000',
-    title: 'FloatChat - Ocean Data Explorer',
+    title: 'Dolphin - Ocean Data Explorer',
     description: 'AI-Powered Conversational Interface for ARGO Ocean Data Discovery and Visualization',
-    siteName: 'FloatChat',
+    siteName: 'Dolphin',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'FloatChat - Ocean Data Explorer',
+    title: 'Dolphin - Ocean Data Explorer',
     description: 'AI-Powered Conversational Interface for ARGO Ocean Data Discovery and Visualization',
   },
 }

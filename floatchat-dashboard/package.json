@@ -2,8 +2,8 @@
   "name": "floatchat-dashboard",
   "version": "1.0.0",
   "private": true,
-  "description": "FloatChat - AI-Powered Conversational Interface for ARGO Ocean Data Discovery and Visualization",
-  "author": "FloatChat Team",
+  "description": "Dolphin - AI-Powered Conversational Interface for ARGO Ocean Data Discovery and Visualization",
+  "author": "Dolphin Team",
   "license": "MIT",
   "scripts": {
     "dev": "next dev",

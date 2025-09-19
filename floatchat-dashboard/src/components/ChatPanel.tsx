@@ -9,7 +9,7 @@ import { useSpeech } from '@/hooks/useSpeech'
 const mockMessages: ChatMessage[] = [
   {
     id: '1',
-    content: 'Hello! I\'m FloatChat, your AI assistant for exploring ocean data. Ask me anything about ARGO floats, temperature profiles, or oceanographic conditions! Currently showing Indian Ocean data.',
+    content: 'Hello! I\'m Dolphin, your AI assistant for exploring ocean data. Ask me anything about ARGO floats, temperature profiles, or oceanographic conditions! Currently showing Indian Ocean data.',
     role: 'assistant',
     timestamp: new Date(Date.now() - 5 * 60 * 1000),
   },
@@ -125,15 +125,17 @@ export default function ChatPanel() {
       <div className="border-b border-gray-100 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            {/* Modern Avatar */}
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-sm">
-              <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-              </svg>
+            {/* Dolphin Logo */}
+            <div className="w-10 h-10 rounded-full overflow-hidden shadow-sm bg-blue-50 flex items-center justify-center">
+              <img 
+                src="/dolphin-logo.png" 
+                alt="Dolphin Logo"
+                className="w-8 h-8 object-contain"
+              />
             </div>
             <div>
               <h2 className="font-medium text-gray-900 text-sm">
-                FloatChat Assistant
+                Dolphin
               </h2>
               <div className="flex items-center space-x-1">
                 <div className="w-2 h-2 bg-green-400 rounded-full"></div>
@@ -271,7 +273,7 @@ export default function ChatPanel() {
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                   </div>
                   <span className="text-sm text-gray-500 font-medium">
-                    FloatChat is thinking...
+                    Dolphin is thinking...
                   </span>
                 </div>
               </div>

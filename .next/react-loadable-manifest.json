@@ -1,0 +1,20 @@
+{
+  "..\\..\\AppData\\Local\\npm-cache\\_npx\\8b377f6eec906bc4\\node_modules\\next\\dist\\client\\dev\\hot-reloader\\app\\use-websocket.js -> @vercel/turbopack-ecmascript-runtime/browser/dev/hmr-client/hmr-client.ts": {
+    "id": "..\\..\\AppData\\Local\\npm-cache\\_npx\\8b377f6eec906bc4\\node_modules\\next\\dist\\client\\dev\\hot-reloader\\app\\use-websocket.js -> @vercel/turbopack-ecmascript-runtime/browser/dev/hmr-client/hmr-client.ts",
+    "files": [
+      "static/chunks/_app-pages-browser_AppData_Local_npm-cache__npx_8b377f6eec906bc4_node_modules_next_dist_clien-374d7d.js"
+    ]
+  },
+  "..\\..\\AppData\\Local\\npm-cache\\_npx\\8b377f6eec906bc4\\node_modules\\next\\dist\\client\\index.js -> ../pages/_app": {
+    "id": "..\\..\\AppData\\Local\\npm-cache\\_npx\\8b377f6eec906bc4\\node_modules\\next\\dist\\client\\index.js -> ../pages/_app",
+    "files": [
+      "static/chunks/_pages-dir-browser_AppData_Local_npm-cache__npx_8b377f6eec906bc4_node_modules_next_dist_pages-04424a.js"
+    ]
+  },
+  "..\\..\\AppData\\Local\\npm-cache\\_npx\\8b377f6eec906bc4\\node_modules\\next\\dist\\client\\index.js -> ../pages/_error": {
+    "id": "..\\..\\AppData\\Local\\npm-cache\\_npx\\8b377f6eec906bc4\\node_modules\\next\\dist\\client\\index.js -> ../pages/_error",
+    "files": [
+      "static/chunks/_pages-dir-browser_AppData_Local_npm-cache__npx_8b377f6eec906bc4_node_modules_next_dist_pages-311b06.js"
+    ]
+  }
+}
